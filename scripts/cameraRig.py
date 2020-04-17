@@ -5,18 +5,22 @@ import cv2
 IMG_SHAPE = (1850, 1137)
 
 class Rig:
-    def __init__(self, cameras):
+    def __init__(self, cameras, calibrated = False):
         self.cameras = cameras
         self.homoGraphies = {}
         self.objP = cameras[0].getObjPoints() # uses square len of 30
 
         # init homographies between the cameras
-        self.initHompgraphies()
+        if not calibrated:
+            self.initHompgraphies()
+        else:
+            self.readHomographyFromFile()
         return 
     
     # create all homographies between cameras 
     def initHompgraphies(self):
         noCameras = len(self.cameras) # number of cameras in rig setup 
+        # homographies = np.empty((np.math.factorial(noCameras-1), 3, 3))
         for i in range(noCameras):
             for j in range(i+1, noCameras):
                 camera1 = self.cameras[i]
@@ -32,9 +36,19 @@ class Rig:
                     None,
                     None
                     )
-                self.homoGraphies[str(i) + str(j)] = 1 # get homogrpahy here
+                self.homoGraphies[str(i) + str(j)] = F 
+
+                # save homogrpaphy 
+                np.save(("data/homographies/" + str(i) + str(j)), F) 
     
-    
+    # get already initialized homographies from file
+    def readHomographyFromFile(self):
+        noCameras = len(self.cameras) # number of cameras in rig setup 
+        for i in range(noCameras):
+            for j in range(i+1, noCameras):
+                nr = str(i) + str(j)
+                self.homoGraphies[nr] = np.load("data/homographies/" + nr + '.npy') 
+
     # get homography between cameras
     def getHomography(self, cam1, cam2):
         return self.homoGraphies[str(cam1) + str(cam2)]
@@ -46,5 +60,5 @@ if __name__ == "__main__":
     camera1 = camera.Camera(cPath1, "hejehj", cameraNr = 0, calibrated = True)
     camera2 = camera.Camera(cPath2, "hejehj", cameraNr = 1, calibrated = True)
     
-    newRig = Rig([camera1, camera2])  
-    newRig.initHompgraphies()  
+    cameras = [camera1, camera2]
+    newRig = Rig(cameras, calibrated = True)
