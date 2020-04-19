@@ -41,6 +41,8 @@ class Rig:
                 # save homogrpaphy 
                 np.save(("data/homographies/" + str(i) + str(j)), F) 
     
+    def getCameras(self):
+        return self.cameras
     # get already initialized homographies from file
     def readHomographyFromFile(self):
         noCameras = len(self.cameras) # number of cameras in rig setup 
