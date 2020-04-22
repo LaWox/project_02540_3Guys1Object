@@ -1,6 +1,7 @@
 import numpy as np 
 import camera
 import cv2 
+import matplotlib.pyplot as plt
 
 IMG_SHAPE = (1850, 1137)
 
@@ -26,18 +27,17 @@ class Rig:
                 camera1 = self.cameras[i]
                 camera2 = self.cameras[j]
 
-                retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, T, E, F = cv2.stereoCalibrate(
+                retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, t, E, F = cv2.stereoCalibrate(
                     camera1.getObjPoints(),
-                    camera1.getCalibrationPoints(),
+                    camera1.getCalibrationPoints(), # get calibration points
                     camera2.getCalibrationPoints(), 
                     IMG_SHAPE,
-                    camera1.getK(),
+                    camera1.getK(), # get the camera matrixes
                     camera2.getK(),
                     None,
                     None
                     )
-                self.homoGraphies[str(i) + str(j)] = F 
-
+                self.homoGraphies[str(i) + str(j)] = (np.concatenate((R, t), axis = 1))
                 # save homogrpaphy 
                 np.save(("data/homographies/" + str(i) + str(j)), F) 
     
@@ -64,3 +64,8 @@ if __name__ == "__main__":
     
     cameras = [camera1, camera2]
     newRig = Rig(cameras, calibrated = True)
+    rt = newRig.getHomography(0, 1)
+
+    plt.imshow("data\calibrationImgs\camera0\frame0_0.png")
+    plt.show()
+
