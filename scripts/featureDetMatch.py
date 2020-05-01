@@ -26,6 +26,9 @@ class Point:
     def getDescriptor(self):
         return self.descriptor
 
+
+
+
 class Match:
     def __init__(self, point1, point2):
         self.point1 = point1
@@ -34,8 +37,9 @@ class Match:
     def getPoints(self):
         return self.point1, self.point2
 
-    def getColor(self): #TODO: return color of the match based on the two points
-        return 0
+    def getColor(self):
+        meanColor=np.mean(np.array([point1.color,point2.color]), axis=0)
+        return meanColor
 
 
 def getFeatures(rig):
