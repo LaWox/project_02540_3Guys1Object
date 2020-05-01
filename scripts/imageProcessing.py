@@ -24,6 +24,8 @@ def resizeImg(imgs, size):
                 * imgs; is a list with pictures from one camera
                 * size; the minimum size which the image will be scaled with"""
 
+    #https://www.tutorialkart.com/opencv/python/opencv-python-resize-image/
+
 
 
 
