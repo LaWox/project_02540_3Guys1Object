@@ -1,10 +1,16 @@
-import open3d as o3d
 import cv2
 
+import camera
 
+
+
+camera1 = camera.Camera("dd", "gg", calibrated=True)
+
+k = camera1.getK()
+print(k)
+
+camera.objPoints
+
+'''
 def rectify_images(camera_rig, cameras, imagepath):
-
-      for i in range(len(cameras)):
-          for j in range(i+1, len(cameras)):
-
-
+'''

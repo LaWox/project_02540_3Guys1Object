@@ -68,6 +68,7 @@ class Camera:
         self.objPoints = objPoints
         self.calibrationPoints = imgPoints
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
+
     
         self.K = mtx
         return 
