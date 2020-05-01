@@ -8,7 +8,10 @@ def get3dPoints(pList, featuresList):
     #points3d=np.empty((int(np.floor(len(pList)/2)),len(featuresList),len(featuresList[0])))
     points3D=[]
     count=0
+
+    
     for x in range(0,len(pList)-1):
+
         Q=cv2.triangulatePoints(pList[x],pList[x+1],featuresList[x],featuresList[x+1])
         Q/= Q[3] #diving by w
 
