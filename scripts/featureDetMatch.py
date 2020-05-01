@@ -8,10 +8,10 @@ import matplotlib.pyplot as plt
 import denseMapping
 
 class Point:
-    def __init__(self, coords, descriptor, color):
+    def __init__(self, coords, color, imgPath, descriptor = None):
         self.coords2d = coords
-        self.descriptor = descriptor
-        self.imgPath = "pathToImg"
+        self.descriptor = descriptor # TODO: Maybe this isn't needed
+        self.imgPath = imgPath # TODO: how should this work?
         self.color = color
 
     def setImg(self, path):
@@ -33,6 +33,9 @@ class Match:
     
     def getPoints(self):
         return self.point1, self.point2
+
+    def getColor(self): #TODO: return color of the match based on the two points
+        return 0
 
 
 def getFeatures(rig):
