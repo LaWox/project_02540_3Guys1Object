@@ -5,6 +5,38 @@ import numpy as np
 import cameraRig
 import camera
 import matplotlib.pyplot as plt
+import denseMapping
+
+class Point:
+    def __init__(self, coords, color, imgPath, descriptor = None):
+        self.coords2d = coords
+        self.descriptor = descriptor # TODO: Maybe this isn't needed
+        self.imgPath = imgPath # TODO: how should this work?
+        self.color = color
+
+    def setImg(self, path):
+        self.imgPath = path
+    
+    def getImg(self):
+        return cv2.imread(self.imgPath)
+
+    def getCoords(self):
+        return self.coords2d
+
+    def getDescriptor(self):
+        return self.descriptor
+
+class Match:
+    def __init__(self, point1, point2):
+        self.point1 = point1
+        self.point2 = point2
+    
+    def getPoints(self):
+        return self.point1, self.point2
+
+    def getColor(self): #TODO: return color of the match based on the two points
+        return 0
+
 
 def getFeatures(rig):
     '''
@@ -41,7 +73,7 @@ def getMatches(rig):
                     desc1 = features[i][imgIdx]
                     desc2 = features[j][imgIdx]
                     match = bf.match(desc1, desc2)
-s                    localMatches.append(match)
+                    localMatches.append(match)
                 matches.append(localMatches)
     return matches
       

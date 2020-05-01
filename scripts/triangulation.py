@@ -3,7 +3,7 @@
 import cv2 
 import numpy as np
 
-
+#Kasta in bilderna också
 def get3dPoints(pList, featuresList):
     #points3d=np.empty((int(np.floor(len(pList)/2)),len(featuresList),len(featuresList[0])))
     points3D=[]
