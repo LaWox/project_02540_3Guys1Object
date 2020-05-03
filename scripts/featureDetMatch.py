@@ -22,6 +22,12 @@ class Point:
         self.color = color
         self.camera = camera
     
+    def __hash__(self): # for storing in dict
+        return hash((self.camera.getCameraNo, self.imgIdx, self.coords2d))
+    
+    def __eq__(self, other): # for storing in dict
+        return ((self.camera.getCameraNo, self.imgIdx, self.coords2d) == (other.camera.getCameraNo, other.imgIdx, other.coords2d))
+
     def getNewPoint(self, newCoords):
         ''' create new point whicch originates from self
         Parameters:
@@ -56,6 +62,9 @@ class Match:
         self.point2 = point2
         self.zncc = zncc
 
+    def __lt__(self, other):
+        return self.zncc < other.zncc
+
     def getPoints(self):
         return self.point1, self.point2
 
@@ -72,8 +81,7 @@ class Match:
     def setZncc(self, value):
         self.zncc = value
     
-    def __lt__(self, other):
-        return self.zncc < other.zncc
+   
 
 def getFeatures(rig):
     '''

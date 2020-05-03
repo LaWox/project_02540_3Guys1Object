@@ -6,18 +6,19 @@ from heapq import heappush, heappop
 import matplotlib.pyplot as plt
 
 def propogateMatches(matches, radius, patchSize):
-    z = 1 # TODO: change these later
+    z = 0.9 # TODO: change these later
     t = 1
 
     mapping = []
     seeds = []
     disp = np.floor(patchSize/2)
-    addedPoints = {}
+    pointDict = {}
 
     for arr in matches:
         for match in arr:
             p1, p2 = match.getPoints()
-            addedPoints = addMatchToDict(match, addedPoints)
+            pointDict[p1] = "True" 
+            pointDict[p2] = "True"
 
             patch1 = getPatch(p1.getImg(), p1.getCoords(), patchSize)
             patch2 = getPatch(p2.getImg(), p2.getCoords(), patchSize)
@@ -27,10 +28,8 @@ def propogateMatches(matches, radius, patchSize):
             heappush(seeds, match) # make a heap out of previous matches
             mapping.append(match) # add all previous matches to the mapping
 
-    i = 0
+    print('before: ', len(mapping))
     while len(seeds) != 0:
-        print(i+1)
-        i += 1
         match = heappop(seeds)
         p1, p2 = match.getPoints()
     
@@ -52,23 +51,21 @@ def propogateMatches(matches, radius, patchSize):
                 s1 = calcS(coords1, p1.getImg())
                 s2 = calcS(coords2, p2.getImg())
 
+
                 if val > z and s1 > t and s2 > t:
                     newPoint1 = p1.getNewPoint(coords1) #TODO: look into more
                     newPoint2 = p2.getNewPoint(coords2)
                     newMatch = fdm.Match(newPoint1, newPoint2, val)
 
-                    print(val)
-                    heappush(seeds, newMatch) # add new match to the heap
+                    if(newPoint1 not in pointDict and newPoint2 not in pointDict): # enforce uniqueness
+                        pointDict[newPoint1] = "True"
+                        pointDict[newPoint2] = "True"
 
-                    # TODO: implement and enforce uniqueness before adding 
-                    mapping.append(newMatch)
+                        heappush(seeds, newMatch) # add new match to the heap
+                        mapping.append(newMatch)
+
+    print('after: ', len(mapping))
     return mapping
-
-def addMatchToDict(match, pointDict):
-    p1, p2 = match.getPoints()
-    pointDict[p1] = "true"
-    pointDict[p2] = "true"
-    return pointDict
 
 def getNewCoords(orgCoord, disp, xy):
     ''' helper function to shift coords in correct pos
@@ -116,13 +113,15 @@ def calcS(pos, img):
     return np.max(gradients) # return the biggest gradient
 
 def zncc(window1, window2):
+    if(True):
+        return 0.95
     win1 = window1.flatten()
     win2 = window2.flatten()
 
     # compute avgs
     avg1 = np.mean(win1)
     avg2 = np.mean(win2)
-    
+  
     # compute std
     std1 = np.std(win1)
     std2 = np.std(win2)
@@ -131,7 +130,7 @@ def zncc(window1, window2):
     for i in range(win1.shape[0]):
         corr += (win1[i] - avg1)*(win2[i] - avg2)
     
-    corr /= (std1*std2)
+    corr /= (std1*std2*win1.size)
 
     return corr 
 
@@ -148,6 +147,6 @@ if __name__ == "__main__":
     newRig = cameraRig.Rig(cameras, calibrated = True)
 
     matches = fdm.getMatches(newRig)
-    propogateMatches(matches, 3, 5)
+    denseMatches = propogateMatches(matches, 3, 5)
     print('done!')
     pass
