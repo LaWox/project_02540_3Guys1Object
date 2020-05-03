@@ -8,42 +8,80 @@ import matplotlib.pyplot as plt
 import denseMapping
 
 class Point:
-    def __init__(self, coords, color, imgPath, descriptor = None):
+    ''' store every keypoint in Point class
+    Arguments:
+        coords: coord of the point in 2d space
+        color: color of the pixel 
+        imgPath: path to the image
+        descriptor: ORB descriptor of the keypoint 
+    '''
+    def __init__(self, coords, color, imgIdx, camera, descriptor = None):
         self.coords2d = coords
         self.descriptor = descriptor # TODO: Maybe this isn't needed
-        self.imgPath = imgPath # TODO: how should this work?
+        self.imgIdx = imgIdx # TODO: how should this work?
         self.color = color
+        self.camera = camera
+    
+    def getNewPoint(self, newCoords):
+        ''' create new point whicch originates from self
+        Parameters:
+            newCoords: the coords of the new point
+        Returns:   
+            newPoint: the new Point() obj
+        '''
+        newPoint = Point(newCoords, self.color, self.imgIdx, self.camera, None) #TODO: color is wrong 
+        return newPoint
 
     def setImg(self, path):
         self.imgPath = path
     
     def getImg(self):
-        return cv2.imread(self.imgPath)
+        #return cv2.imread(self.imgPath)
+        return self.camera.getImg(self.imgIdx)
 
     def getCoords(self):
-        return self.coords2d
+        return np.asarray(self.coords2d)
 
     def getDescriptor(self):
         return self.descriptor
 
 class Match:
-    def __init__(self, point1, point2):
+    ''' Match consisting of two points
+    Arguments:
+        point1: first point
+        point2: second point
+    '''
+    def __init__(self, point1, point2, zncc = 0.0):
         self.point1 = point1
         self.point2 = point2
-    
+        self.zncc = zncc
+
     def getPoints(self):
         return self.point1, self.point2
 
     def getColor(self): #TODO: return color of the match based on the two points
         return 0
+    
+    def getRt(self, rig):
+        cameraNo1 = self.point1.camera.getCameraNo()
+        cameraNo2 = self.point2.camera.getCameraNo()
 
+        Rt = rig.getRt(cameraNo1, cameraNo2)
+        return Rt
+    
+    def setZncc(self, value):
+        self.zncc = value
+    
+    def __lt__(self, other):
+        return self.zncc < other.zncc
 
 def getFeatures(rig):
     '''
-    input:
-        rig --> array of images responding to the different cameras
-    returns:
-        features --> for every image an array of features
+    Parameters:
+        rig: array of images responding to the different cameras
+
+    Returns:
+        features: for every image an array of features
     '''
     orb = cv2.ORB_create()
     cameras = rig.getCameras()
@@ -56,24 +94,49 @@ def getFeatures(rig):
         for img in imgs:
             kp = orb.detect(img, None)
             kp, des = orb.compute(img, kp)
-            print(kp[0].pt)
-            feats.append(des)
+            feats.append((kp, des))
         features.append(feats) # features contains (noCamers * noImages * noFeatures) elements
     return features
 
 def getMatches(rig):
+    ''' returns matches from the every camera pair
+    Arguments:
+        rig: a Rig object which holds the cameras and their pictures 
+    Returns:
+        matches: an array of Matches 
+    '''
     matches = []
+    points = []
+
     features = getFeatures(rig) # getFeatures returns all features for entire camera rig
     bf = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True) # brute force matching with hamming distance
+    cameras = rig.getCameras()
     
+
     for i in range(len(features)):
         for j in range(i+1, len(features)):
                 localMatches = []
                 for imgIdx in range(len(features[i])):
-                    desc1 = features[i][imgIdx]
-                    desc2 = features[j][imgIdx]
-                    match = bf.match(desc1, desc2)
-                    localMatches.append(match)
+                    kp1 = features[i][imgIdx][0]
+                    kp2 = features[j][imgIdx][0]
+
+                    desc1 = features[i][imgIdx][1] # extract the descriptor
+                    desc2 = features[j][imgIdx][1]
+
+                    match = bf.match(desc1, desc2) # match the descriptors
+
+                    for m in match: # loop through the matches to creta Points objects
+                        if(m.distance < 15):
+                            queryIdx = m.queryIdx
+                            trainIdx = m.trainIdx
+                            pos1 = kp1[queryIdx].pt
+                            pos2 = kp2[trainIdx].pt
+
+                            p1 = Point(pos1, 0, imgIdx, cameras[i], None)
+                            p2 = Point(pos2, 0, imgIdx, cameras[j], None) #TODO: stuff not added yet
+
+                            mObj = Match(p1, p2)
+                            localMatches.append(mObj)
                 matches.append(localMatches)
     return matches
       
