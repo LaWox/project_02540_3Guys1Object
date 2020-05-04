@@ -51,9 +51,6 @@ class Point:
     def getDescriptor(self):
         return self.descriptor
 
-
-
-
 class Match:
     ''' Match consisting of two points
     Arguments:
@@ -71,25 +68,19 @@ class Match:
     def getPoints(self):
         return self.point1, self.point2
 
-
     def getColor(self):
-        meanColor=np.mean(np.array([point1.color,point2.color]), axis=0)
+        meanColor=np.mean(np.array([self.point1.color, self.point2.color]), axis=0)
         return meanColor
-
-    
+ 
     def getRt(self, rig):
         cameraNo1 = self.point1.camera.getCameraNo()
         cameraNo2 = self.point2.camera.getCameraNo()
-
-
         Rt = rig.getRt(cameraNo1, cameraNo2)
         return Rt
     
     def setZncc(self, value):
         self.zncc = value
     
-   
-
 def getFeatures(rig):
     '''
     Parameters:
@@ -127,7 +118,6 @@ def getMatches(rig):
     bf = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True) # brute force matching with hamming distance
     cameras = rig.getCameras()
     
-
     for i in range(len(features)):
         for j in range(i+1, len(features)):
                 localMatches = []

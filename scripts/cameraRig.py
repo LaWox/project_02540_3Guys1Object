@@ -43,6 +43,7 @@ class Rig:
 
     def getCameras(self):
         return self.cameras
+
     # get already initialized homographies from file
     def readHomographyFromFile(self):
         noCameras = len(self.cameras) # number of cameras in rig setup 
@@ -57,6 +58,7 @@ class Rig:
 
     def getRt(self):
         return self.Rt
+
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"
     cPath2 = "data/calibrationImgs/camera1/"

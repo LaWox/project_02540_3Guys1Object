@@ -6,6 +6,8 @@ from heapq import heappush, heappop
 import time
 
 def propogateMatches(matches, radius, patchSize):
+    ''' find more matches from original matches 
+    '''
     z = 0.9 # TODO: change these later
     t = 1.0
     S_DIRECTIONS = np.asarray([[1, 0], [-1, 0], [0, 1], [0, -1]])
@@ -28,7 +30,6 @@ def propogateMatches(matches, radius, patchSize):
             match.setZncc(val)
             heappush(seeds, match) # make a heap out of previous matches
             mapping.append(match) # add all previous matches to the mapping
-
     i = 1
     while len(seeds) != 0:
         print('match nr: ', i)
@@ -40,7 +41,6 @@ def propogateMatches(matches, radius, patchSize):
 
         p1Pos = p1.getCoords()
         p2Pos = p2.getCoords()
-
         for x in range(radius):
             for y in range(radius):
                 # adjust pos for new points
