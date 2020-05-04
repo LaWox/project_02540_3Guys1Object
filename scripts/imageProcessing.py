@@ -43,8 +43,29 @@ def resizeImg(imgs, sizeY):
     #print('The new size is: '+str(reSized[0].shape))
     return reSized
 
+def outputImgs(paths,imgs):
+    """ Params:
+                    * paths; is a list with paths to the output folders
+                    * imgs; is a list with a list of images for each camera"""
+    count=0
+    for path in paths:
+        for x in range(0,1): #change to 'range(0,len(imgs[count]))' if doing it for all the pictures
+            name=str(x)+".jpg"
+            filepath = path + name
+            cv2.imwrite(filepath,imgs[count][x])
+        count += 1
+    print("The pictures were successfully outputted")
+
+
+
 
 def main():
+    """
+    When using these functions together, do first a trial run with only one picture from each camera to see which cameras has the smallest dimensions.
+    After that you can manually change witch camera pictures you are supposed to change. The only thing you really need to worry about is the output
+    path if images are written out. The output path needs to be in the same order as the cameras in the cameraListResized.
+
+    """
     cam1 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/")
     print("cam1 loaded")
     cam2 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/platon/")
@@ -63,11 +84,16 @@ def main():
         if x != refCam:
             cameraListResized.append(resizeImg(cameraListOriginal[x], minY))
         else:
-            cameraListResized.append(cameraListOriginal[x])
+            #cameraListResized.append(cameraListOriginal[x]) #Comment if writing any images, i.e. using outputImgs()
+            continue
 
     print("Original size ",str(cam1[0].shape))
     print("Resized image ",str(cameraListResized[0][0].shape))
     print("Reference ",str(cam2[0].shape))
+
+    outputPath1 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/resized/"
+    #outputPath2 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/platon/resized/"
+    outputImgs([outputPath1],cameraListResized)
 
 if __name__== "__main__" :
     main()
