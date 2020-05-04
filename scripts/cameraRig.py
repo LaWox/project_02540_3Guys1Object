@@ -116,4 +116,3 @@ if __name__ == "__main__":
     newRig = Rig(cameras, calibrated = True)
     rt = newRig.getHomography(0, 1)
     rec = newRig.getRectifyTransform(0, 1)
-    print(rec[0])

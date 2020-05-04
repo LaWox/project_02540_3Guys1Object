@@ -130,12 +130,12 @@ class Camera:
         return self.cameraNr
 
 def getObjPoints(squareLength = 30):
-    ''' returns manifacturd objPoints for calibration
-    Parameters:
-        int squareLength: length of the square of the calibration obj
-    Returns:
-        npArr objPoints: arrar of 3d points
-    '''
+        ''' returns manifacturd objPoints for calibration
+        Parameters:
+            int squareLength: length of the square of the calibration obj
+        Returns:
+            npArr objPoints: arrar of 3d points
+        '''
     objPoints = []
     for i in range(BOARD_DIMS[0]):
         for j in range(BOARD_DIMS[1]):

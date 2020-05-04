@@ -82,10 +82,9 @@ class Match:
         self.zncc = value
     
 def getFeatures(rig):
-    '''
+    ''' retreves the features from the rig
     Parameters:
         rig: array of images responding to the different cameras
-
     Returns:
         features: for every image an array of features
     '''

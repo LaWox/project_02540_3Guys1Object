@@ -61,8 +61,8 @@ def get3dPoints(pList, featuresList):
         count += 1"""
 
 def getError(featList, pointsL):
-    count=0;
-    sum = 0.0;
+    count = 0
+    sum = 0.0
     for x in range(0,len(featList)):
         # TODO: GET PROJECTION MATRIX 1
         # TODO: GET PROJECTION MATRIX 2
