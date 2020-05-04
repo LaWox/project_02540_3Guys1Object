@@ -3,16 +3,17 @@ import featureDetMatch as fdm
 import camera
 import cameraRig
 from heapq import heappush, heappop
-import matplotlib.pyplot as plt
+import time
 
 def propogateMatches(matches, radius, patchSize):
     z = 0.9 # TODO: change these later
-    t = 1
+    t = 1.0
+    S_DIRECTIONS = np.asarray([[1, 0], [-1, 0], [0, 1], [0, -1]])
 
     mapping = []
     seeds = []
-    disp = np.floor(patchSize/2)
-    pointDict = {}
+    disp = np.floor(radius/2)
+    pointDict = {}  #TODO: this will not work correctly if noCameras > 2
 
     for arr in matches:
         for match in arr:
@@ -28,41 +29,49 @@ def propogateMatches(matches, radius, patchSize):
             heappush(seeds, match) # make a heap out of previous matches
             mapping.append(match) # add all previous matches to the mapping
 
-    print('before: ', len(mapping))
+    i = 1
     while len(seeds) != 0:
+        print('match nr: ', i)
+        i+= 1
+
+        # startTime = time.time()
         match = heappop(seeds)
         p1, p2 = match.getPoints()
-    
-        patch1 = getPatch(p1.getImg(), p1.getCoords(), patchSize)
-        patch2 = getPatch(p2.getImg(), p2.getCoords(), patchSize)
 
-        for x in range(patchSize):
-            for y in range(patchSize):
-                coords1 = p1.getCoords()
-                coords1 = getNewCoords(coords1, disp, (x, y)) # adjust pos within the loop
+        p1Pos = p1.getCoords()
+        p2Pos = p2.getCoords()
 
-                coords2 = p2.getCoords()
-                coords2 = getNewCoords(coords2, disp, (x, y))
+        for x in range(radius):
+            for y in range(radius):
+                # adjust pos for new points
+                coords1 = getNewCoords(p1Pos, disp, (x, y)) 
+                coords2 = getNewCoords(p2Pos, disp, (x, y))
 
-                newPatch1 = getPatch(p1.getImg(), coords1, patchSize) # get new patches from new coords
-                newPatch2 = getPatch(p2.getImg(), coords2, patchSize)
+                # generate new points
+                newPoint1 = p1.getNewPoint(coords1) 
+                newPoint2 = p2.getNewPoint(coords2)
 
-                val = zncc(newPatch1, newPatch2)
-                s1 = calcS(coords1, p1.getImg())
-                s2 = calcS(coords2, p2.getImg())
-
-
-                if val > z and s1 > t and s2 > t:
-                    newPoint1 = p1.getNewPoint(coords1) #TODO: look into more
-                    newPoint2 = p2.getNewPoint(coords2)
-                    newMatch = fdm.Match(newPoint1, newPoint2, val)
-
-                    if(newPoint1 not in pointDict and newPoint2 not in pointDict): # enforce uniqueness
-                        pointDict[newPoint1] = "True"
-                        pointDict[newPoint2] = "True"
-
-                        heappush(seeds, newMatch) # add new match to the heap
-                        mapping.append(newMatch)
+                # enforce uniqueness before calculations 
+                if(newPoint1 not in pointDict and newPoint2 not in pointDict): 
+                    s1 = calcS(coords1, p1.getImg(), S_DIRECTIONS)
+                    if s1 > t:
+                        s2 = calcS(coords2, p2.getImg(), S_DIRECTIONS)
+                    if s2 > t:
+                        # check s first so to not do uneccesary calculations
+                        newPatch1 = getPatch(p1.getImg(), coords1, patchSize) 
+                        newPatch2 = getPatch(p2.getImg(), coords2, patchSize)
+                        val = zncc(newPatch1, newPatch2)
+                        if val > z:
+                            # add points to dict
+                            pointDict[newPoint1] = "True"
+                            pointDict[newPoint2] = "True"
+                            # add new match to the heap
+                            newMatch = fdm.Match(newPoint1, newPoint2, val)
+                            heappush(seeds, newMatch) 
+                            mapping.append(newMatch)   
+        
+        # totTime = time.time() - startTime    
+        # print(f'time for match nr:{i} is {totTime}')                
 
     print('after: ', len(mapping))
     return mapping
@@ -97,24 +106,30 @@ def getPatch(img, center, size):
     patch = img[y-pad:y+pad+1, x-pad:x+pad+1]
     return np.asarray(patch)
 
-def calcS(pos, img):
-    directions = [[1, 0], [-1, 0], [0, 1], [0, -1]]
+def calcS(pos, img, directions):
+    ''' calculate the value S enshures more similiarity between points
+    Parameters:
+        tuple pos : holds the coord of the point
+    Returns:
+        float s: the value S 
+    '''
     gradients = np.empty(4)
     y, x = pos.astype(int)
 
-    # calc gradients in 4 directions
+    # calc gradients in directions
     i = 0
+    centerIntensity = int(img[x][y])
     for dirr in directions:
         dX = x + dirr[0]
         dY = y + dirr[1]
 
-        gradients[i] = int(img[x][y]) - int(img[dX][dY])
+        gradients[i] =  centerIntensity- int(img[dX][dY])
         i += 1
-    return np.max(gradients) # return the biggest gradient
+
+    s = np.max(gradients) # return the biggest gradient
+    return s
 
 def zncc(window1, window2):
-    if(True):
-        return 0.95
     win1 = window1.flatten()
     win2 = window2.flatten()
 
@@ -126,12 +141,8 @@ def zncc(window1, window2):
     std1 = np.std(win1)
     std2 = np.std(win2)
 
-    corr = 0
-    for i in range(win1.shape[0]):
-        corr += (win1[i] - avg1)*(win2[i] - avg2)
-    
+    corr = (np.abs(win1 - avg1)).dot((np.abs(win2 - avg2)))
     corr /= (std1*std2*win1.size)
-
     return corr 
 
 if __name__ == "__main__":
