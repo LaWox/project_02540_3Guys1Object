@@ -6,6 +6,13 @@ BOARD_DIMS = (22, 13)
 # BOARD_DIMS = (8, 6)
 
 class Camera:
+    ''' Holds camera atributes
+    Parameters:
+        string calibrationImgPath: path to calibration images
+        int cameraNr: number of the camera, like an id
+        npArr K: intridtic matrix of the camera TODO: probably remove this one
+        boolean calibrated: if calibrated or not 
+    '''
     def __init__(self, calibrationImgPath, objImgPath, cameraNr = 0, K = [], calibrated = False):
         self.K = []
         self.objImgPath = objImgPath                 # path to cameras picture of object 
@@ -122,8 +129,13 @@ class Camera:
     def getCameraNo(self):
         return self.cameraNr
 
-# getting objPoints for calibration
 def getObjPoints(squareLength = 30):
+    ''' returns manifacturd objPoints for calibration
+    Parameters:
+        int squareLength: length of the square of the calibration obj
+    Returns:
+        npArr objPoints: arrar of 3d points
+    '''
     objPoints = []
     for i in range(BOARD_DIMS[0]):
         for j in range(BOARD_DIMS[1]):
