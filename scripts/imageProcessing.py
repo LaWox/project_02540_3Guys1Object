@@ -1,15 +1,19 @@
 import numpy as np
 import cv2
 import glob
+import whatimage
+import pyheif
+from PIL import Image
 
-def loadPictures(path):
+def loadPictures(path, fileformat):
     """ fuction for loading pictures
     Params:
         * path; is a string with a path to one folder with images from one camera
+        * fileformat: a file format ending like '.jpg' or '.png'
      Outputs:
-        *images: a list with all of the images from the path folder
+        * images: a list with all of the images from the path folder
     """
-    images=[cv2.imread(file) for file in glob.glob(path + "*.jpg")]
+    images=[cv2.imread(file) for file in sorted(glob.glob(path + "*"+fileformat))]
     return images
 
 def chooseMinSize(imgs):
@@ -69,6 +73,20 @@ def outputImgs(paths,imgs):
         count += 1
     print("The pictures were successfully outputted")
 
+def read_heic(folder_path):
+    paths=sorted(glob.glob(folder_path + "*.heic"))
+    for path in paths:
+        name=path.split("/")[-1]
+        with open(path, 'rb') as file:
+            image = pyheif.read_heif(file)
+            for metadata in image.metadata or []:
+                if metadata['type'] == 'Exif':
+                    fstream = io.BytesIO(metadata['data'][6:])
+    
+        # now just convert to jpeg
+        pi = PIL.Image.open(fstream)
+        pi.save(name, "jpg")
+
 
 
 
@@ -79,25 +97,33 @@ def main():
     path if images are written out. The output path needs to be in the same order as the cameras in the cameraListResized.
 
     """
-    cam1 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/")
-    print("cam1 loaded")
-    cam2 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/platon/")
-    print("cam2 loaded")
+    #cam1 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/calibration_jussi/",".jpg")
+    #print("cam1 loaded")
+    #cam2 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Platon/calibration_platon/",".jpg")
+    #print("cam2 loaded")
+    #cam3 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/William/calibration_william/",".heic")
+    #print("cam3 loaded")
+    #print(cam3[0])
+    #cv2.imshow('test', cam3[0])
+    read_heic("/Users/jussikangas/Desktop/Computer_vision/Pictures/William/calibration_william/")
 
-    print(len(cam1), len(cam2))
-    test = [cam1[0],cam2[0]]
-    minY, refCam = chooseMinSize(test)
+
+
+
+    print(len(cam1), len(cam2), len(cam3))
+    minY, refCam = chooseMinSize([cam1[0],cam2[0],cam3[0] ])
     print("Min size chosen")
     print('The reference is camera: '+str(refCam))
 
-    cameraListOriginal =[cam1, cam2]
+    cameraListOriginal =[cam1, cam2, cam3]
     cameraListResized = []
+    return
 
     for x in range(0,len(cameraListOriginal)):
         if x != refCam:
             cameraListResized.append(resizeImg(cameraListOriginal[x], minY))
         else:
-            #cameraListResized.append(cameraListOriginal[x]) #Comment if writing any images, i.e. using outputImgs()
+            cameraListResized.append(cameraListOriginal[x]) #Comment if writing any images, i.e. using outputImgs()
             continue
 
     print("Original size ",str(cam1[0].shape))
@@ -106,7 +132,7 @@ def main():
 
     outputPath1 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/resized/"
     #outputPath2 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/platon/resized/"
-    outputImgs([outputPath1],cameraListResized)
+    #outputImgs([outputPath1],cameraListResized)
 
 if __name__== "__main__" :
     main()
