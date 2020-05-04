@@ -23,10 +23,10 @@ class Point:
         self.camera = camera
     
     def __hash__(self): # for storing in dict
-        return hash((self.camera.getCameraNo, self.imgIdx, self.coords2d))
+        return hash((self.camera.getCameraNo, self.imgIdx, self.coords2d[0], self.coords2d[1]))
     
     def __eq__(self, other): # for storing in dict
-        return ((self.camera.getCameraNo, self.imgIdx, self.coords2d) == (other.camera.getCameraNo, other.imgIdx, other.coords2d))
+        return ((self.camera.getCameraNo, self.imgIdx, self.coords2d[0], self.coords2d[1]) == (other.camera.getCameraNo, other.imgIdx, other.coords2d[0], other.coords2d[1]))
 
     def getNewPoint(self, newCoords):
         ''' create new point whicch originates from self
