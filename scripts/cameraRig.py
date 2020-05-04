@@ -10,6 +10,7 @@ class Rig:
         self.cameras = cameras
         self.homoGraphies = {}
         self.objP = cameras[0].getObjPoints() # uses square len of 30
+        self.Rt = None #TODO: implement Rt
 
         # init homographies between the cameras
         if not calibrated:
@@ -38,9 +39,8 @@ class Rig:
                     None
                     )
                 self.homoGraphies[str(i) + str(j)] = (np.concatenate((R, t), axis = 1))
-                # save homogrpaphy 
-                np.save(("data/homographies/" + str(i) + str(j)), F) 
-    
+                np.save(("data/homographies/" + str(i) + str(j)), F)   # save F  
+
     def getCameras(self):
         return self.cameras
     # get already initialized homographies from file
@@ -55,6 +55,8 @@ class Rig:
     def getHomography(self, cam1, cam2):
         return self.homoGraphies[str(cam1) + str(cam2)]
 
+    def getRt(self):
+        return self.Rt
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"
     cPath2 = "data/calibrationImgs/camera1/"

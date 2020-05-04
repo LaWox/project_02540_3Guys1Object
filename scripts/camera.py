@@ -5,15 +5,6 @@ import glob
 BOARD_DIMS = (22, 13)
 # BOARD_DIMS = (8, 6)
 
-# getting objPoints for calibration
-def getObjPoints(squareLength = 30):
-    objPoints = []
-    for i in range(BOARD_DIMS[0]):
-        for j in range(BOARD_DIMS[1]):
-            point = (i*squareLength, j*squareLength, 0.0)
-            objPoints.append(point)
-    return np.asarray(objPoints)
-
 class Camera:
     def __init__(self, calibrationImgPath, objImgPath, cameraNr = 0, K = [], calibrated = False):
         self.K = []
@@ -22,7 +13,8 @@ class Camera:
         self.calibrationPoints = []
         self.objPoints = []
         self.cameraNr = cameraNr
-
+        
+        self.imgPaths = self.__setImgPaths()
         if calibrated:
             self.K = self.__getKFromFile() # get calibrated K from file
             self.calibrationPoints = self.__getCalibrationPointsFromFile()
@@ -68,6 +60,7 @@ class Camera:
         self.objPoints = objPoints
         self.calibrationPoints = imgPoints
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
+
     
         self.K = mtx
         return 
@@ -97,6 +90,10 @@ class Camera:
     def __getCalibrationImages(self):
         images = [cv2.imread(file) for file in glob.glob(self.calibrationImgPath + "*.png")]
         return images 
+    
+    def __setImgPaths(self):
+        images = [str(file) for file in glob.glob(self.objImgPath + "*.png")]
+        return images
 
     def getCalibrationPoints(self):
         return self.calibrationPoints
@@ -109,9 +106,30 @@ class Camera:
         images = [cv2.imread(file) for file in glob.glob(self.objImgPath + "*.png")]
         return images
 
+    def getImg(self, idx):
+        ''' gets a specific image from the folder of images
+        Parameters:
+            idx: index of image to be retreived 
+        Returns:
+            img: the image object
+        '''
+        return cv2.imread(self.imgPaths[idx], cv2.IMREAD_GRAYSCALE)
+
     def getK(self):
         # return intristic matrix
         return self.K
+
+    def getCameraNo(self):
+        return self.cameraNr
+
+# getting objPoints for calibration
+def getObjPoints(squareLength = 30):
+    objPoints = []
+    for i in range(BOARD_DIMS[0]):
+        for j in range(BOARD_DIMS[1]):
+            point = (i*squareLength, j*squareLength, 0.0)
+            objPoints.append(point)
+    return np.asarray(objPoints)
 
 if __name__ == "__main__":
     calibrationPath = "data/calibrationImgs/camera0/"
