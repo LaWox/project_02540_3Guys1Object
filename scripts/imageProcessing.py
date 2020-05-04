@@ -1,9 +1,7 @@
 import numpy as np
 import cv2
 import glob
-import whatimage
-import pyheif
-from PIL import Image
+
 
 def loadPictures(path, fileformat):
     """ fuction for loading pictures
@@ -66,26 +64,22 @@ def outputImgs(paths,imgs):
     """
     count=0
     for path in paths:
-        for x in range(0,1): #change to 'range(0,len(imgs[count]))' if doing it for all the pictures
+        for x in range(0,len(imgs[count])): #change to 'range(0,len(imgs[count]))' if doing it for all the pictures
             name=str(x)+".jpg"
             filepath = path + name
             cv2.imwrite(filepath,imgs[count][x])
         count += 1
     print("The pictures were successfully outputted")
 
-def read_heic(folder_path):
-    paths=sorted(glob.glob(folder_path + "*.heic"))
-    for path in paths:
-        name=path.split("/")[-1]
-        with open(path, 'rb') as file:
-            image = pyheif.read_heif(file)
-            for metadata in image.metadata or []:
-                if metadata['type'] == 'Exif':
-                    fstream = io.BytesIO(metadata['data'][6:])
-    
-        # now just convert to jpeg
-        pi = PIL.Image.open(fstream)
-        pi.save(name, "jpg")
+
+def rectifyImage():
+    #https://www.programcreek.com/python/example/89312/cv2.stereoRectify
+    #https://stackoverflow.com/questions/27431062/stereocalibration-in-opencv-on-python
+    #get a rectify transform from camera rig
+    #transform it with a picture
+    return
+
+
 
 
 
@@ -97,15 +91,13 @@ def main():
     path if images are written out. The output path needs to be in the same order as the cameras in the cameraListResized.
 
     """
-    #cam1 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/calibration_jussi/",".jpg")
-    #print("cam1 loaded")
-    #cam2 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Platon/calibration_platon/",".jpg")
-    #print("cam2 loaded")
-    #cam3 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/William/calibration_william/",".heic")
-    #print("cam3 loaded")
-    #print(cam3[0])
-    #cv2.imshow('test', cam3[0])
-    read_heic("/Users/jussikangas/Desktop/Computer_vision/Pictures/William/calibration_william/")
+    cam1 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/human_jussi/",".jpg")
+    print("cam1 loaded")
+    cam2 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/Platon/human_platon/",".jpg")
+    print("cam2 loaded")
+    cam3 = loadPictures("/Users/jussikangas/Desktop/Computer_vision/Pictures/William/human_william/",".jpg")
+    print("cam3 loaded")
+
 
 
 
@@ -117,22 +109,22 @@ def main():
 
     cameraListOriginal =[cam1, cam2, cam3]
     cameraListResized = []
-    return
+
 
     for x in range(0,len(cameraListOriginal)):
         if x != refCam:
             cameraListResized.append(resizeImg(cameraListOriginal[x], minY))
         else:
-            cameraListResized.append(cameraListOriginal[x]) #Comment if writing any images, i.e. using outputImgs()
+            #cameraListResized.append(cameraListOriginal[x]) #Comment if writing any images, i.e. using outputImgs()
             continue
 
-    print("Original size ",str(cam1[0].shape))
-    print("Resized image ",str(cameraListResized[0][0].shape))
-    print("Reference ",str(cam2[0].shape))
+    print("Original size ",str(cam1[0].shape),str(cam2[0].shape))
+    print("Resized image ",str(cameraListResized[0][0].shape),str(cameraListResized[1][0].shape))
+    print("Reference ",str(cam3[0].shape))
 
-    outputPath1 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/resized/"
-    #outputPath2 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/platon/resized/"
-    #outputImgs([outputPath1],cameraListResized)
+    outputPath1 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/Jussi/human_jussi/resized/"
+    outputPath2 = "/Users/jussikangas/Desktop/Computer_vision/Pictures/platon/human_platon/resized/"
+    outputImgs([outputPath1, outputPath2],cameraListResized)
 
 if __name__== "__main__" :
     main()
