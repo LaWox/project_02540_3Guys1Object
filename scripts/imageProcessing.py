@@ -3,26 +3,28 @@ import cv2
 import glob
 
 def loadPictures(path):
-    """ Params:
-            * path; is a string with a path to one folder with images from one camera
-        Outputs:
-            *images: a list with all of the images from the path folder"""
-
+    """ fuction for loading pictures
+    Params:
+        * path; is a string with a path to one folder with images from one camera
+     Outputs:
+        *images: a list with all of the images from the path folder
+    """
     images=[cv2.imread(file) for file in glob.glob(path + "*.jpg")]
     return images
 
 def chooseMinSize(imgs):
-    """ Params:
-        * imgs; is a list with one sample image from each camera
-        Outputs:
-                *minY: The smallest Y dimension for the cameras
-                *refCam: The camera with the smallest Y dimension"""
+    """ find the min size of all images 
+    Params:
+        * imgs: is a list with one sample image from each camera
+    Outputs:
+        *minY: The smallest Y dimension for the cameras
+        *refCam: The camera with the smallest Y dimension
+    """
     minY = 1000000
     refCam = ""
     count=0
     for img in imgs:
         Y = img.shape[0]
-
 
         if (Y < minY):
             minY = Y
@@ -31,13 +33,13 @@ def chooseMinSize(imgs):
     return (minY, refCam)
 
 def resizeImg(imgs, sizeY):
-    """ Params:
-                * imgs; is a list with pictures from one camera
-                * size; the minimum size which the image will be scaled with
-        Outputs:
-                *reSized: a list with the resized images
-                """
-
+    """ resizing images
+    Params:
+        * imgs; is a list with pictures from one camera
+        * size; the minimum size which the image will be scaled with
+    Outputs:
+        *reSized: a list with the resized images        
+     """
 
     reSized = []
     ratio=sizeY/imgs[0].shape[0]
@@ -47,17 +49,18 @@ def resizeImg(imgs, sizeY):
     for img in imgs:
         reSized.append(cv2.resize(img, dim, interpolation = cv2.INTER_AREA))
 
-
     #print('The old size was: '+str(imgs[0].shape))
     #print('The new size is: '+str(reSized[0].shape))
     return reSized
 
 def outputImgs(paths,imgs):
-    """ Params:
-                    * paths; is a list with paths to the output folders
-                    * imgs; is a list with a list of images for each camera
-        Outputs:
-                    * Returns nothing, but writes images to the path folder"""
+    """ writes images to new path
+    Params:
+        * paths; is a list with paths to the output folders
+        * imgs; is a list with a list of images for each camera
+    Outputs:
+        * Returns nothing, but writes images to the path folder
+    """
     count=0
     for path in paths:
         for x in range(0,1): #change to 'range(0,len(imgs[count]))' if doing it for all the pictures
