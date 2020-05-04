@@ -11,6 +11,7 @@ class Rig:
         self.homoGraphies = {}
         self.objP = cameras[0].getObjPoints() # uses square len of 30
         self.Rt = None #TODO: implement Rt
+        self.rectify = 0 #TODO: fix this
 
         # init homographies between the cameras
         if not calibrated:
@@ -58,6 +59,9 @@ class Rig:
 
     def getRt(self):
         return self.Rt
+    def getRectifyTransform(self):
+        return self.rectify
+
 
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"

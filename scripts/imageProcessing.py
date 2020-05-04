@@ -40,7 +40,6 @@ def resizeImg(imgs, sizeY):
     Outputs:
         *reSized: a list with the resized images        
      """
-
     reSized = []
     ratio=sizeY/imgs[0].shape[0]
     width = int(imgs[0].shape[1] * ratio)
