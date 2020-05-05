@@ -1,9 +1,11 @@
 import numpy as np 
 import cv2 
 import glob
+import matplotlib.pyplot as plt
 
-BOARD_DIMS = (22, 13)
+# BOARD_DIMS = (22, 13)
 # BOARD_DIMS = (8, 6)
+BOARD_DIMS = (10, 7)
 
 class Camera:
     ''' Holds camera atributes
@@ -35,6 +37,7 @@ class Camera:
         return 
 
     def __calibrate(self):
+        print(f'calibrating camera {self.cameraNr}')
         # termination criteria
         criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -45,17 +48,14 @@ class Camera:
         gray = []
 
         objP = getObjPoints() # make checkersPoints 
-
         counter = 1 
         for img in images:
             gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
             ret, corners = cv2.findChessboardCorners(gray, BOARD_DIMS, None)
             
-            '''
             print(f"corners found {ret}")
             print(f"image nr:{counter} being processed")
             counter += 1
-            '''
             if ret: # if it finds the corners
                 accuCorners = cv2.cornerSubPix(gray,corners,(11,11),(-1,-1),criteria)
                 objPoints.append(objP)
@@ -68,7 +68,6 @@ class Camera:
         self.calibrationPoints = imgPoints
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
 
-    
         self.K = mtx
         return 
 
@@ -95,7 +94,7 @@ class Camera:
         return points
 
     def __getCalibrationImages(self):
-        images = [cv2.imread(file) for file in glob.glob(self.calibrationImgPath + "*.png")]
+        images = [cv2.imread(file) for file in glob.glob(self.calibrationImgPath + "*.jpg")]
         return images 
     
     def __setImgPaths(self):
