@@ -109,7 +109,7 @@ class Camera:
 
     def getImages(self):
         # get images associated with this camera from path parameter
-        images = [cv2.imread(file) for file in glob.glob(self.objImgPath + "*.png")]
+        images = [cv2.imread(file) for file in glob.glob(self.objImgPath + "*.jpg")]
         return images
 
     def getImg(self, idx):

@@ -11,12 +11,13 @@ class Rig:
         Camera[] cameras: array of Camera objects
         Bool calibrated: if it has been calibrated already or not
     '''
-    def __init__(self, cameras, calibrated = False):
+    def __init__(self, cameras, calibrated = False, verbose = 0):
         self.cameras = cameras
         self.homoGraphies = {}
         self.objP = cameras[0].getObjPoints() # uses square len of 30
         self.Rt = None #TODO: implement Rt
         self.rectifyTranformations = {} #TODO: fix this
+        self.verbose = verbose
 
         # init homographies between the cameras
         if not calibrated:

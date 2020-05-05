@@ -88,6 +88,11 @@ def getFeatures(rig):
     Returns:
         features: for every image an array of features
     '''
+    if rig.verbose == 1:
+        shouldPrint = True
+    else:
+        shouldPrint = False
+    
     orb = cv2.ORB_create()
     cameras = rig.getCameras()
     features = []
@@ -96,6 +101,8 @@ def getFeatures(rig):
     for camera in cameras:
         feats = []
         imgs = camera.getImages()
+        if(shouldPrint):
+            print(f'finding features in camera {camera.getCameraNo()}')
         for img in imgs:
             kp = orb.detect(img, None)
             kp, des = orb.compute(img, kp)
@@ -110,15 +117,20 @@ def getMatches(rig):
     Returns:
         matches: an array of Matches 
     '''
+    if rig.verbose == 1:
+        shouldPrint = True
+    else:
+        shouldPrint = False
+    
     matches = []
-    points = []
-
     features = getFeatures(rig) # getFeatures returns all features for entire camera rig
     bf = cv2.BFMatcher_create(cv2.NORM_HAMMING, crossCheck=True) # brute force matching with hamming distance
     cameras = rig.getCameras()
     
     for i in range(len(features)):
         for j in range(i+1, len(features)):
+                if(shouldPrint):
+                    print(f'Matching {i} : {j}')
                 localMatches = []
                 for imgIdx in range(len(features[i])):
                     kp1 = features[i][imgIdx][0]
