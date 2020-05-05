@@ -72,11 +72,8 @@ def outputImgs(paths,imgs):
     print("The pictures were successfully outputted")
 
 
-def rectifyImage():
-    #https://www.programcreek.com/python/example/89312/cv2.stereoRectify
-    #https://stackoverflow.com/questions/27431062/stereocalibration-in-opencv-on-python
-    #get a rectify transform from camera rig
-    #transform it with a picture
+def rectifyImage(rig, path):
+
     return
 
 
