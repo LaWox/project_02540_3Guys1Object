@@ -20,8 +20,9 @@ def someTestingStuff():
     cameras = [camera1, camera2, camera3]
     newRig = cameraRig.Rig(cameras, calibrated = True, verbose=1)
 
-    matches = np.asarray(fdm.getMatches(newRig))
-    print(matches.shape)
+    matches = fdm.getMatches(newRig)
+    for arr in matches:
+        print(len(arr))
 
 if __name__ == "__main__":
    someTestingStuff()

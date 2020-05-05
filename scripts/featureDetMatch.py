@@ -133,6 +133,10 @@ def getMatches(rig):
                     print(f'Matching {i} : {j}')
                 localMatches = []
                 for imgIdx in range(len(features[i])):
+                   
+                    if imgIdx > 3: #TODO: just for testing
+                        break
+                   
                     kp1 = features[i][imgIdx][0]
                     kp2 = features[j][imgIdx][0]
 
@@ -142,7 +146,7 @@ def getMatches(rig):
                     match = bf.match(desc1, desc2) # match the descriptors
 
                     for m in match: # loop through the matches to creta Points objects
-                        if(m.distance < 15):
+                        if(m.distance < 100): #TODO: threshholds the matches
                             queryIdx = m.queryIdx
                             trainIdx = m.trainIdx
                             pos1 = kp1[queryIdx].pt
@@ -163,7 +167,6 @@ if __name__ == "__main__":
 
     objPath1 =  "data/objImages/camera0/"
     objPath2 =  "data/objImages/camera1/"
-
 
     camera1 = camera.Camera(cPath1, objPath1, cameraNr = 0, calibrated = True)
     camera2 = camera.Camera(cPath2, objPath2, cameraNr = 1, calibrated = True)

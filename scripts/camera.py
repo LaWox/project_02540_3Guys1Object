@@ -110,6 +110,10 @@ class Camera:
     def getImages(self):
         # get images associated with this camera from path parameter
         images = [cv2.imread(file) for file in glob.glob(self.objImgPath + "*.jpg")]
+        
+        # raise error if no images found
+        if len(images) == 0:
+            raise Exception(f'No images found with path {self.objImgPath}')
         return images
 
     def getImg(self, idx):
