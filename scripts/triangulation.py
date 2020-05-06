@@ -5,6 +5,7 @@ import numpy as np
 from camera import Camera
 from cameraRig import Rig
 from featureDetMatch import getMatches
+from imageProcessing import rectifyImage
 
 #Kasta in bilderna också
 """
@@ -150,6 +151,7 @@ if __name__ == "__main__":
     camera2 = Camera(calibrationPath2, objPath2, cameraNr = 1, calibrated=True)
     camera3 = Camera(calibrationPath3, objPath3, cameraNr = 2, calibrated=True)
     rig = Rig([camera1,camera2,camera3], calibrated=True)
+    rig=rectifyImage(rig)
     matches=getMatches(rig)
     pointList=[]
     for match in matches:

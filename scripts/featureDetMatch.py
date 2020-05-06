@@ -53,6 +53,11 @@ class Point:
     def getDescriptor(self):
         return self.descriptor
 
+    def updateImgs(self,imgsList):
+        self.camera = imgsList
+        return
+
+
 class Match:
     ''' Match consisting of two points
     Arguments:

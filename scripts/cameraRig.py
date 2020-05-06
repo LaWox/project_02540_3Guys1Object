@@ -131,6 +131,10 @@ class Rig:
         nr = str(cameraNo1) + str(cameraNo2)
         return self.projectionTransformRectified[nr]
 
+    def updateCameras(self, cameras):
+        self.cameras=cameras
+        return
+
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"
     cPath2 = "data/calibrationImgs/camera1/"

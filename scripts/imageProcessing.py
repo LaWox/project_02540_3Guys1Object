@@ -72,7 +72,7 @@ def outputImgs(paths,imgs):
     print("The pictures were successfully outputted")
 
 
-def rectifyImage(rig,camera,otherCameraNumber):
+def rectifyImage(rig):
     """ rectifies all images in a camera
         Params:
             * rig; rig object, the camera rig containing the rectification transform
@@ -81,17 +81,22 @@ def rectifyImage(rig,camera,otherCameraNumber):
         Outputs:
             * Returns imgsRect, a list containing the rectifies images
         """
+    cameras=rig.getCameras()
 
-    imgs=camera.getImages()
-    R = rig.getRectifyTransform(camera.getCameraNo, otherCameraNumber)
-    P = getProjectionTransformRectified(camera.getCameraNo, otherCameraNumber)
-    Ymap, Xmap=cv2.initUndistortRectifyMap(camera.getK(),R=R,newCameraMatrix=P,map1=imgs[0].shape,map2=CV_32F)
-    imgsRect=np.empty((len(imgs),3))
-    for x in range(0,len(imgs)):
-        imgsRect[x] = cv2.remap(imgs[x], Xmap, Ymap, cv2.INTER_LINEAR)
+    for i in range(0,len(cameras)):
+        for j in range(i+1,len(cameras)) :
+            imgs=cameras[i].getImages()
+            R = rig.getRectifyTransform(cameras[i].getCameraNo(), j)
+            P = rig.getProjectionTransformRectified(cameras[i].getCameraNo(), j)
+            Ymap, Xmap=cv2.initUndistortRectifyMap(cameras[i].getK(),R=R,newCameraMatrix=P,map1=imgs[0].shape,map2=cv2.CV_32FC1)
+            imgsRect=[]
+            for x in range(0,len(imgs)):
+                imgsRect.append(cv2.remap(imgs[x], Xmap, Ymap, cv2.INTER_LINEAR))
+            cameras[i].updateImgs(imgsRect)
+    rig.updateCameras(cameras)
     #https://stackoverflow.com/questions/53192333/problem-with-stereo-rectification-using-opencv-and-python
 
-    return imgsRect
+    return rig
 
 
 
