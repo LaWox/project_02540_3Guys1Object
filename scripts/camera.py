@@ -132,6 +132,10 @@ class Camera:
     def getCameraNo(self):
         return self.cameraNr
 
+    def updateImgs(self, imgsList):
+        self.camera = imgsList
+        return
+
 def getObjPoints(squareLength = 30):
     ''' returns manifacturd objPoints for calibration
     Parameters:

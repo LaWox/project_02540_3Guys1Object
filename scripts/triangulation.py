@@ -165,6 +165,9 @@ if __name__ == "__main__":
         sumV[x]=sum
     print(np.sum(sumV))
 
+    for x in range(0,len(pointList)):
+        np.save(("data/3Dpoints/" + str(x)), pointList[x])
+
 
 
 
