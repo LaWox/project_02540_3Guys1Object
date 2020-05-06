@@ -3,6 +3,7 @@ import cameraRig
 import camera 
 import numpy as np 
 import featureDetMatch as fdm
+import denseMapping as dm
 
 def someTestingStuff():
     cPath1 = "data/pictures/Jussi/calibration_jussi_resized/"
@@ -21,8 +22,9 @@ def someTestingStuff():
     newRig = cameraRig.Rig(cameras, calibrated = True, verbose=1)
 
     matches = fdm.getMatches(newRig)
-    for arr in matches:
-        print(len(arr))
+    densemapping = dm.propogateMatches(matches, 5, 11)
+    densemapping = np.asarray(densemapping)
+    print(densemapping.shape)
 
 if __name__ == "__main__":
    someTestingStuff()

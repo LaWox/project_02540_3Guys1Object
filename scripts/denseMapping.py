@@ -9,7 +9,7 @@ def propogateMatches(matches, radius, patchSize):
     ''' find more matches from original matches 
     '''
     z = 0.9 # TODO: change these later
-    t = 1.0
+    t = 0.01
     S_DIRECTIONS = np.asarray([[1, 0], [-1, 0], [0, 1], [0, -1]])
 
     mapping = []
@@ -158,6 +158,6 @@ if __name__ == "__main__":
     newRig = cameraRig.Rig(cameras, calibrated = True)
 
     matches = fdm.getMatches(newRig)
-    denseMatches = propogateMatches(matches, 3, 5)
+    denseMatches = propogateMatches(matches, 5, 11)
     print('done!')
     pass

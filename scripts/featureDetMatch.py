@@ -78,6 +78,10 @@ class Match:
         Rt = rig.getRt(cameraNo1, cameraNo2)
         return Rt
     
+    def getImgIdx(self):
+        idx = self.point1.imgIdx
+        return idx
+
     def setZncc(self, value):
         self.zncc = value
     
@@ -146,7 +150,7 @@ def getMatches(rig):
                     match = bf.match(desc1, desc2) # match the descriptors
 
                     for m in match: # loop through the matches to creta Points objects
-                        if(m.distance < 100): #TODO: threshholds the matches
+                        if(m.distance < 20): #TODO: threshholds the matches
                             queryIdx = m.queryIdx
                             trainIdx = m.trainIdx
                             pos1 = kp1[queryIdx].pt
@@ -159,7 +163,6 @@ def getMatches(rig):
                             localMatches.append(mObj)
                 matches.append(localMatches)
     return matches
-      
 
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"

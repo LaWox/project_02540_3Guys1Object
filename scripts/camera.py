@@ -22,8 +22,8 @@ class Camera:
         self.calibrationPoints = []
         self.objPoints = []
         self.cameraNr = cameraNr
-        
         self.imgPaths = self.__setImgPaths()
+
         if calibrated:
             self.K = self.__getKFromFile() # get calibrated K from file
             self.calibrationPoints = self.__getCalibrationPointsFromFile()
@@ -98,7 +98,7 @@ class Camera:
         return images 
     
     def __setImgPaths(self):
-        images = [str(file) for file in glob.glob(self.objImgPath + "*.png")]
+        images = [str(file) for file in glob.glob(self.objImgPath + "*.jpg")]
         return images
 
     def getCalibrationPoints(self):
