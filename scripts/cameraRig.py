@@ -17,6 +17,7 @@ class Rig:
         self.objP = cameras[0].getObjPoints() # uses square len of 30
         self.Rt = None #TODO: implement Rt
         self.rectifyTranformations = {} #TODO: fix this
+        self.projectionTransformRectified = {}
         self.verbose = verbose
 
         # init homographies between the cameras
@@ -36,6 +37,7 @@ class Rig:
         '''
         noCameras = len(self.cameras) # number of cameras in rig setup 
         rectifyTransform = np.empty((2, 3, 3))
+        projectionTransformRectified = np.empty((2, 3, 4)) # A matrix for storing projection matrixes from stereoRectify()
 
         for i in range(noCameras):
             for j in range(i+1, noCameras):
@@ -57,7 +59,7 @@ class Rig:
                 self.homoGraphies[str(i) + str(j)] = (np.concatenate((R, t), axis = 1))
                 np.save(("data/homographies/" + str(i) + str(j)), F) #TODO this doesn't make any sense right now   
 
-                # set and save rectifyTransorm
+                """# set and save rectifyTransorm
                 returns = cv2.stereoRectify(
                     camera1.getK(), 
                     distCoeffs1, 
@@ -68,9 +70,27 @@ class Rig:
                     t,
                     rectifyTransform[0], # set rectifyTransorms in here
                     rectifyTransform[1]
-                )
+                )"""
+                # set and save rectifyTransorm
+                rect1,rect2, P1, P2, disparityToDepthMap, ROI_l, ROI_r = cv2.stereoRectify(
+                    camera1.getK(),
+                    distCoeffs1,
+                    camera2.getK(),
+                    distCoeffs2,
+                    IMG_SHAPE,
+                    R,
+                    t)
+                rectifyTransform[0] = rect1 # set rectifyTransorms in here
+                rectifyTransform[1] = rect2
+                projectionTransformRectified[0] = P1
+                projectionTransformRectified[1] = P2
+
+
+
                 self.rectifyTranformations[str(i) + str(j)] = (rectifyTransform)
-                np.save(("data/rectifyTransforms/" + str(i) + str(j)), rectifyTransform)    
+                np.save(("data/rectifyTransforms/" + str(i) + str(j)), rectifyTransform)
+                self.projectionTransformRectified[str(i) + str(j)] = (projectionTransformRectified)
+                np.save(("data/projectionTransformRectified/" + str(i) + str(j)), projectionTransformRectified)
 
     def getCameras(self):
         return self.cameras
@@ -87,7 +107,8 @@ class Rig:
             for j in range(i+1, noCameras):
                 nr = str(i) + str(j)
                 self.homoGraphies[nr] = np.load("data/homographies/" + nr + '.npy')
-                self.rectifyTranformations[nr] = np.load("data/rectifyTransforms/" + nr + '.npy') 
+                self.rectifyTranformations[nr] = np.load("data/rectifyTransforms/" + nr + '.npy')
+                self.projectionTransformRectified[nr] = np.load("data/projectionTransformRectified/" + nr + '.npy')
     
     def getHomography(self, cam1, cam2):
         ''' Returns homography between camera1 and camera 1
@@ -106,14 +127,21 @@ class Rig:
         nr = str(cameraNo1) + str(cameraNo2)
         return self.rectifyTranformations[nr]
 
+    def getProjectionTransformRectified(self, cameraNo1, cameraNo2):
+        nr = str(cameraNo1) + str(cameraNo2)
+        return self.projectionTransformRectified[nr]
+
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"
     cPath2 = "data/calibrationImgs/camera1/"
+    cPath3 = "data/calibrationImgs/camera2/"
 
     camera1 = camera.Camera(cPath1, "hejehj", cameraNr = 0, calibrated = True)
     camera2 = camera.Camera(cPath2, "hejehj", cameraNr = 1, calibrated = True)
+    camera3 = camera.Camera(cPath3, "hejehj", cameraNr=2, calibrated=True)
     
-    cameras = [camera1, camera2]
-    newRig = Rig(cameras, calibrated = True)
+    cameras = [camera1, camera2, camera3]
+    newRig = Rig(cameras, calibrated = False)
     rt = newRig.getHomography(0, 1)
-    rec = newRig.getRectifyTransform(0, 1)
+    rec = newRig.getRectifyTransform(0, 2)
+    P = newRig.getProjectionTransformRectified(0,2)

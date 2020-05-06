@@ -83,8 +83,8 @@ def rectifyImage(rig,camera,otherCameraNumber):
         """
 
     imgs=camera.getImages()
-    R ="" #GET THE RECTIFICATION TRANSFORM #rig.getRectifyTransform(camera.getCameraNo, otherCameraNumber)
-    P ="" #GET THE P MATRIX, this and the above is returned from stereoRectify()
+    R = rig.getRectifyTransform(camera.getCameraNo, otherCameraNumber)
+    P = getProjectionTransformRectified(camera.getCameraNo, otherCameraNumber)
     Ymap, Xmap=cv2.initUndistortRectifyMap(camera.getK(),R=R,newCameraMatrix=P,map1=imgs[0].shape,map2=CV_32F)
     imgsRect=np.empty((len(imgs),3))
     for x in range(0,len(imgs)):

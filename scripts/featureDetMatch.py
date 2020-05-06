@@ -182,8 +182,12 @@ if __name__ == "__main__":
     objPath1 =  "data/objImages/camera0/"
     objPath2 =  "data/objImages/camera1/"
 
+
     camera1 = camera.Camera(cPath1, objPath1, cameraNr = 0, calibrated = True)
     camera2 = camera.Camera(cPath2, objPath2, cameraNr = 1, calibrated = True)
+
+
+
     
     cameras = [camera1, camera2]
     newRig = cameraRig.Rig(cameras, calibrated = True)
