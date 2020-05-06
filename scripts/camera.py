@@ -22,8 +22,8 @@ class Camera:
         self.calibrationPoints = []
         self.objPoints = []
         self.cameraNr = cameraNr
-        
         self.imgPaths = self.__setImgPaths()
+
         if calibrated:
             self.K = self.__getKFromFile() # get calibrated K from file
             self.calibrationPoints = self.__getCalibrationPointsFromFile()
@@ -98,7 +98,7 @@ class Camera:
         return images 
     
     def __setImgPaths(self):
-        images = [str(file) for file in glob.glob(self.objImgPath + "*.png")]
+        images = [str(file) for file in glob.glob(self.objImgPath + "*.jpg")]
         return images
 
     def getCalibrationPoints(self):
@@ -109,7 +109,11 @@ class Camera:
 
     def getImages(self):
         # get images associated with this camera from path parameter
-        images = [cv2.imread(file) for file in glob.glob(self.objImgPath + "*.png")]
+        images = [cv2.imread(file) for file in glob.glob(self.objImgPath + "*.jpg")]
+        
+        # raise error if no images found
+        if len(images) == 0:
+            raise Exception(f'No images found with path {self.objImgPath}')
         return images
 
     def getImg(self, idx):
