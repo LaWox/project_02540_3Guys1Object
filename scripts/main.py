@@ -21,7 +21,7 @@ def someTestingStuff():
     cameras = [camera1, camera2, camera3]
     newRig = cameraRig.Rig(cameras, calibrated = True, verbose=1)
 
-    matches = fdm.getMatches(newRig)
+    matches = fdm.getMatches(newRig, 30)
     densemapping = dm.propogateMatches(matches, 5, 11)
     densemapping = np.asarray(densemapping)
     print(densemapping.shape)

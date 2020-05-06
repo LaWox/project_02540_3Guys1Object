@@ -15,14 +15,15 @@ def propogateMatches(matches, radius, patchSize):
     mapping = []
     seeds = []
     disp = np.floor(radius/2)
-    pointDict = {}  #TODO: this will not work correctly if noCameras > 2
 
+    addedPointDict = {}  #TODO: this will not work correctly if noCameras > 2
+    consideredMatches = {}
     for arr in matches:
         for match in arr:
             p1, p2 = match.getPoints()
-            pointDict[p1] = "True" 
-            pointDict[p2] = "True"
-
+            addedPointDict[p1] = "True" 
+            addedPointDict[p2] = "True"
+            
             patch1 = getPatch(p1.getImg(), p1.getCoords(), patchSize)
             patch2 = getPatch(p2.getImg(), p2.getCoords(), patchSize)
 
@@ -35,10 +36,8 @@ def propogateMatches(matches, radius, patchSize):
         print('match nr: ', i)
         i+= 1
 
-        # startTime = time.time()
         match = heappop(seeds)
         p1, p2 = match.getPoints()
-
         p1Pos = p1.getCoords()
         p2Pos = p2.getCoords()
         for x in range(radius):
@@ -51,8 +50,14 @@ def propogateMatches(matches, radius, patchSize):
                 newPoint1 = p1.getNewPoint(coords1) 
                 newPoint2 = p2.getNewPoint(coords2)
 
+                newMatch = fdm.Match(newPoint1, newPoint2)
+               
+                if newMatch in consideredMatches: # if we've considered the match we skip to next iteration
+                    continue
+                
+                consideredMatches[newMatch] = True
                 # enforce uniqueness before calculations 
-                if(newPoint1 not in pointDict and newPoint2 not in pointDict): 
+                if(newPoint1 not in addedPointDict and newPoint2 not in addedPointDict): 
                     s1 = calcS(coords1, p1.getImg(), S_DIRECTIONS)
                     if s1 > t:
                         s2 = calcS(coords2, p2.getImg(), S_DIRECTIONS)
@@ -63,15 +68,13 @@ def propogateMatches(matches, radius, patchSize):
                         val = zncc(newPatch1, newPatch2)
                         if val > z:
                             # add points to dict
-                            pointDict[newPoint1] = "True"
-                            pointDict[newPoint2] = "True"
+                            addedPointDict[newPoint1] = "True"
+                            addedPointDict[newPoint2] = "True"
+
+                            newMatch.setZncc(val)
                             # add new match to the heap
-                            newMatch = fdm.Match(newPoint1, newPoint2, val)
                             heappush(seeds, newMatch) 
-                            mapping.append(newMatch)   
-        
-        # totTime = time.time() - startTime    
-        # print(f'time for match nr:{i} is {totTime}')                
+                            mapping.append(newMatch)                  
 
     print('after: ', len(mapping))
     return mapping
@@ -144,6 +147,13 @@ def zncc(window1, window2):
     corr = (np.abs(win1 - avg1)).dot((np.abs(win2 - avg2)))
     corr /= (std1*std2*win1.size)
     return corr 
+
+def printSetup(match):
+    p1, p2 = match.getPoints()
+    c1 = p1.getCamera()
+    c2 = p2.getCamera()
+
+    print(c1.getCameraNo(), c2.getCameraNo())
 
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"
