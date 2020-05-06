@@ -72,9 +72,26 @@ def outputImgs(paths,imgs):
     print("The pictures were successfully outputted")
 
 
-def rectifyImage(rig, path):
+def rectifyImage(rig,camera,otherCameraNumber):
+    """ rectifies all images in a camera
+        Params:
+            * rig; rig object, the camera rig containing the rectification transform
+            * camera; a camera object, this is the reference camera
+            * otherCameraNumber; int, the number of the other camera
+        Outputs:
+            * Returns imgsRect, a list containing the rectifies images
+        """
 
-    return
+    imgs=camera.getImages()
+    R ="" #GET THE RECTIFICATION TRANSFORM #rig.getRectifyTransform(camera.getCameraNo, otherCameraNumber)
+    P ="" #GET THE P MATRIX, this and the above is returned from stereoRectify()
+    Ymap, Xmap=cv2.initUndistortRectifyMap(camera.getK(),R=R,newCameraMatrix=P,map1=imgs[0].shape,map2=CV_32F)
+    imgsRect=np.empty((len(imgs),3))
+    for x in range(0,len(imgs)):
+        imgsRect[x] = cv2.remap(imgs[x], Xmap, Ymap, cv2.INTER_LINEAR)
+    #https://stackoverflow.com/questions/53192333/problem-with-stereo-rectification-using-opencv-and-python
+
+    return imgsRect
 
 
 

@@ -113,12 +113,12 @@ getError([P1,P2],[a3xN,b3xN],points)"""
 
 
 if __name__ == "__main__":
-    calibrationPath1 = "../data/cameraData/camera0/"
-    calibrationPath2 = "../data/cameraData/camera1/"
-    calibrationPath3 = "../data/cameraData/camera2/"
-    objPath1 = "../data/cameraData/camera0/"
-    objPath2 = "../data/cameraData/camera1/"
-    objPath3 = "../data/cameraData/camera2/"
+    calibrationPath1 = "data/cameraData/camera0/"
+    calibrationPath2 = "data/cameraData/camera1/"
+    calibrationPath3 = "data/cameraData/camera2/"
+    objPath1 = "data/cameraData/camera0/"
+    objPath2 = "data/cameraData/camera1/"
+    objPath3 = "data/cameraData/camera2/"
     camera1 = Camera(calibrationPath1, objPath1, calibrated=True)
     camera2 = Camera(calibrationPath2, objPath2, calibrated=True)
     camera3 = Camera(calibrationPath3, objPath3, calibrated=True)
@@ -126,7 +126,8 @@ if __name__ == "__main__":
     matches=getMatches(rig)
     for m in matches:
         print(m)
-    points, color =get3dPoints(matches,rig)
+
+    #points, color =get3dPoints(matches,rig)
     print('Done')
 
 
