@@ -155,6 +155,7 @@ if __name__ == "__main__":
     matches=getMatches(rig)
     pointList=[]
     for match in matches:
+        print(len(match))
         points, color = get3dPoints(match,rig)
         pointList.append(points)
 
