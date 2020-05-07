@@ -8,8 +8,8 @@ from featureDetMatch import getMatches
 from imageProcessing import rectifyImage
 
 #Kasta in bilderna också
-"""
-def get3dPoints(pList, featuresList):
+
+"""def get3dPoints(pList, featuresList):
     #points3d=np.empty((int(np.floor(len(pList)/2)),len(featuresList),len(featuresList[0])))
     points3D=[]
     count=0
@@ -22,6 +22,44 @@ def get3dPoints(pList, featuresList):
         points3D.append(Q[:])
     return points3D"""
 
+def get3dPointsUnrect(matches, rig):
+    points3d = np.empty((len(matches),3))
+    pointsColor = np.empty((len(matches),3))
+    count=0
+
+    # TODO: Fix how we get the projection matrix
+
+
+    for x in range(0,len(matches)):
+        cam1=matches[x].point1.camera.getCameraNo()
+        cam2=matches[x].point2.camera.getCameraNo()
+        coord1 = makeNestedList(matches[x].point1.getCoords())
+        coord2 = makeNestedList(matches[x].point2.getCoords())
+
+        Rt = rig.getRt(cam1,cam2)
+        K1 = matches[x].point1.camera.getK()
+        K2 = matches[x].point2.camera.getK()
+
+        #P1=np.concatenate((K1,np.zeros((3,1))),axis=1)
+        P1=np.eye(4)[:3]
+        P2=K2@Rt
+
+        #Triangulation
+        Q=cv2.triangulatePoints(P1,P2,coord1,coord2)
+        #print(Q)
+        Q/= Q[3] #diving by w
+        #print(Q)
+
+        points3d[count]=np.transpose(Q[:3])[0] #becomes a 3D vector, w is removed
+        #print(points3d[count])
+
+        #Storing the color
+        #pointsColor[count]=matches[x].getColor()
+
+        count +=1
+
+    return [points3d, pointsColor]
+
 def makeNestedList(list):
     newList = np.empty((len(list), 1))
     for x in range(0,len(list)):
@@ -30,7 +68,7 @@ def makeNestedList(list):
     return newList
 
 
-def get3dPoints(matches, rig):
+def get3dPointsRect(matches, rig):
     points3d = np.empty((len(matches),3))
     pointsColor = np.empty((len(matches),3))
     count=0
@@ -85,7 +123,7 @@ def get3dPoints(matches, rig):
 
         count += 1"""
 
-def getError(matches, pointsL, rig):
+def getErrorRect(matches, pointsL, rig):
     count = 0
     sum = 0.0
     for x in range(0,len(matches)):
@@ -113,6 +151,42 @@ def getError(matches, pointsL, rig):
 
         count += 1
     return sum
+
+def getErrorUnrect(matches, pointsL, rig):
+    count = 0
+    sum = 0.0
+    for x in range(0,len(matches)):
+        cam1 = matches[x].point1.camera.getCameraNo()
+        cam2 = matches[x].point2.camera.getCameraNo()
+        coord1 = matches[x].point1.getCoords()
+        coord2 = matches[x].point2.getCoords()
+
+        Rt = rig.getRt(cam1, cam2)
+        K1 = matches[x].point1.camera.getK()
+        K2 = matches[x].point2.camera.getK()
+
+        #P1 = np.concatenate((K1, np.zeros((3, 1))), axis=1)
+        P1 = np.eye(4)[:3]
+        P2 = K2 @ Rt
+
+
+        points3d = np.concatenate((pointsL[x], np.array([1])))
+        points3d=makeNestedList(points3d)
+
+        pixel1 = P1 @ points3d
+        pixel1 /= pixel1[2]
+        pixel2 = P2 @ points3d
+        pixel2 /= pixel2[2]
+
+
+        error1 = np.sqrt(np.sum((coord1 - pixel1[:2].flatten()) ** 2))
+        error2 = np.sqrt(np.sum((coord2 - pixel2[:2].flatten()) ** 2))
+        print('Error in cam1',error1,'Error in cam2',error2)
+        sum += error1 + error2
+
+        count += 1
+    return sum
+
 
 
 
@@ -151,17 +225,18 @@ if __name__ == "__main__":
     camera2 = Camera(calibrationPath2, objPath2, cameraNr = 1, calibrated=True)
     camera3 = Camera(calibrationPath3, objPath3, cameraNr = 2, calibrated=True)
     rig = Rig([camera1,camera2,camera3], calibrated=True)
-    rig=rectifyImage(rig)
+    #rig=rectifyImage(rig)
     matches=getMatches(rig)
     pointList=[]
+
     for match in matches:
         print(len(match))
-        points, color = get3dPoints(match,rig)
+        points, color = get3dPointsUnrect(match,rig)
         pointList.append(points)
 
     sumV=np.empty((len(matches)))
     for x in range(0,len(pointList)):
-        sum=getError(matches[x],pointList[x],rig)
+        sum=getErrorUnrect(matches[x],pointList[x],rig)
         print('The sum is: '+str(sum))
         sumV[x]=sum
     print(np.sum(sumV))
