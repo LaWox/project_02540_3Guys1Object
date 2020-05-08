@@ -44,9 +44,15 @@ class Point:
     def getImg(self):
         #return cv2.imread(self.imgPath)
         return self.camera.getImg(self.imgIdx)
+    
+    def getImgIdx(self):
+        return self.imgIdx
+
+    def getCamera(self):
+        return self.camera
 
     def getCoords(self):
-        return np.asarray(self.coords2d)
+        return np.asarray(self.coords2d).astype(int)
 
     def getDescriptor(self):
         return self.descriptor
@@ -65,6 +71,12 @@ class Match:
     def __lt__(self, other):
         return self.zncc < other.zncc
 
+    def __hash__(self):
+        return hash((self.point1, self.point2))
+    
+    def __eq__(self, other):
+        return ((self.point1, self.point2) == (other.point1, other.point2))
+
     def getPoints(self):
         return self.point1, self.point2
 
@@ -78,6 +90,10 @@ class Match:
         Rt = rig.getRt(cameraNo1, cameraNo2)
         return Rt
     
+    def getImgIdx(self):
+        idx = self.point1.imgIdx
+        return idx
+
     def setZncc(self, value):
         self.zncc = value
     
@@ -102,7 +118,7 @@ def getFeatures(rig):
         feats = []
         imgs = camera.getImages()
         if(shouldPrint):
-            print(f'finding features in camera {camera.getCameraNo()}')
+            print(f'Finding features in camera {camera.getCameraNo()}')
         for img in imgs:
             kp = orb.detect(img, None)
             kp, des = orb.compute(img, kp)
@@ -110,7 +126,7 @@ def getFeatures(rig):
         features.append(feats) # features contains (noCamers * noImages * noFeatures) elements
     return features
 
-def getMatches(rig):
+def getMatches(rig, threshold = 50):
     ''' returns matches from the every camera pair
     Arguments:
         rig: a Rig object which holds the cameras and their pictures 
@@ -130,7 +146,8 @@ def getMatches(rig):
     for i in range(len(features)):
         for j in range(i+1, len(features)):
                 if(shouldPrint):
-                    print(f'Matching {i} : {j}')
+                    print(f'Matching {i} <--> {j} : ', end='')
+                
                 localMatches = []
                 for imgIdx in range(len(features[i])):
                    
@@ -146,7 +163,7 @@ def getMatches(rig):
                     match = bf.match(desc1, desc2) # match the descriptors
 
                     for m in match: # loop through the matches to creta Points objects
-                        if(m.distance < 100): #TODO: threshholds the matches
+                        if(m.distance < threshold): # threshholds the matches
                             queryIdx = m.queryIdx
                             trainIdx = m.trainIdx
                             pos1 = kp1[queryIdx].pt
@@ -157,9 +174,10 @@ def getMatches(rig):
 
                             mObj = Match(p1, p2)
                             localMatches.append(mObj)
+                if(shouldPrint):
+                    print(f'{len(localMatches)} matches found')
                 matches.append(localMatches)
     return matches
-      
 
 if __name__ == "__main__":
     cPath1 = "data/calibrationImgs/camera0/"
