@@ -16,13 +16,13 @@ def propogateMatches(matches, radius, patchSize):
     seeds = []
     disp = np.floor(radius/2)
 
-    addedPointDict = {}  #TODO: this will not work correctly if noCameras > 2
-    consideredMatches = {}
+    addedPosDict1 = {} 
+    addedPosDict2 = {}
+    consideredPosDict = {}
+
     for arr in matches:
         for match in arr:
             p1, p2 = match.getPoints()
-            addedPointDict[p1] = "True" 
-            addedPointDict[p2] = "True"
             
             patch1 = getPatch(p1.getImg(), p1.getCoords(), patchSize)
             patch2 = getPatch(p2.getImg(), p2.getCoords(), patchSize)
@@ -31,33 +31,48 @@ def propogateMatches(matches, radius, patchSize):
             match.setZncc(val)
             heappush(seeds, match) # make a heap out of previous matches
             mapping.append(match) # add all previous matches to the mapping
-    i = 1
+    i = 0
+    currCameraPair = ()
+    currImgIdx = None
+
     while len(seeds) != 0:
-        print('match nr: ', i)
         i+= 1
+        print(f'propagating match {i}')
 
         match = heappop(seeds)
         p1, p2 = match.getPoints()
+
+        newCameraPair = (p1.getCamera().getCameraNo, p2.getCamera().getCameraNo)
+        newImgIdx = p1.getImgIdx()
+
+        # reset the point dictionary whenever we change camera or picture 
+        if(newCameraPair != currCameraPair or newImgIdx != currImgIdx):
+            posDict1 = {}
+            posDict2 = {}
+            consideredPosDict = {}
+            print('new Setup')
+
         p1Pos = p1.getCoords()
         p2Pos = p2.getCoords()
+        
+        if((tuple(p1Pos) + tuple(p2Pos)) in consideredPosDict):
+            continue
+
+        consideredPosDict[(tuple(p1Pos) + tuple(p2Pos))] = "true"
+
         for x in range(radius):
             for y in range(radius):
                 # adjust pos for new points
                 coords1 = getNewCoords(p1Pos, disp, (x, y)) 
                 coords2 = getNewCoords(p2Pos, disp, (x, y))
 
-                # generate new points
-                newPoint1 = p1.getNewPoint(coords1) 
-                newPoint2 = p2.getNewPoint(coords2)
-
-                newMatch = fdm.Match(newPoint1, newPoint2)
-               
-                if newMatch in consideredMatches: # if we've considered the match we skip to next iteration
+                # enforce disparity gradient
+                if np.max((coords1-p1Pos)-(coords2-p2Pos)) > 1:
                     continue
-                
-                consideredMatches[newMatch] = True
+
                 # enforce uniqueness before calculations 
-                if(newPoint1 not in addedPointDict and newPoint2 not in addedPointDict): 
+                if(tuple(coords1) not in posDict1 and tuple(coords2) not in posDict2):
+ 
                     s1 = calcS(coords1, p1.getImg(), S_DIRECTIONS)
                     if s1 > t:
                         s2 = calcS(coords2, p2.getImg(), S_DIRECTIONS)
@@ -66,15 +81,25 @@ def propogateMatches(matches, radius, patchSize):
                         newPatch1 = getPatch(p1.getImg(), coords1, patchSize) 
                         newPatch2 = getPatch(p2.getImg(), coords2, patchSize)
                         val = zncc(newPatch1, newPatch2)
+                        
                         if val > z:
                             # add points to dict
-                            addedPointDict[newPoint1] = "True"
-                            addedPointDict[newPoint2] = "True"
+                            addedPosDict1[tuple(coords1)] = "True"
+                            addedPosDict2[tuple(coords2)] = "True"
 
-                            newMatch.setZncc(val)
+                             # generate new points
+                            newPoint1 = p1.getNewPoint(coords1) 
+                            newPoint2 = p2.getNewPoint(coords2)
+                            
+                            # gen new match  
+                            newMatch = fdm.Match(newPoint1, newPoint2, zncc=val)
+
                             # add new match to the heap
                             heappush(seeds, newMatch) 
-                            mapping.append(newMatch)                  
+                            mapping.append(newMatch)  
+                            print('found new Match')
+                            
+
 
     print('after: ', len(mapping))
     return mapping

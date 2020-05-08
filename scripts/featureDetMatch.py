@@ -44,11 +44,15 @@ class Point:
     def getImg(self):
         #return cv2.imread(self.imgPath)
         return self.camera.getImg(self.imgIdx)
+    
+    def getImgIdx(self):
+        return self.imgIdx
+
     def getCamera(self):
         return self.camera
 
     def getCoords(self):
-        return np.asarray(self.coords2d)
+        return np.asarray(self.coords2d).astype(int)
 
     def getDescriptor(self):
         return self.descriptor
@@ -68,7 +72,7 @@ class Match:
         return self.zncc < other.zncc
 
     def __hash__(self):
-        return(hash(self.point1, self.point2))
+        return hash((self.point1, self.point2))
     
     def __eq__(self, other):
         return ((self.point1, self.point2) == (other.point1, other.point2))
@@ -114,7 +118,7 @@ def getFeatures(rig):
         feats = []
         imgs = camera.getImages()
         if(shouldPrint):
-            print(f'finding features in camera {camera.getCameraNo()}')
+            print(f'Finding features in camera {camera.getCameraNo()}')
         for img in imgs:
             kp = orb.detect(img, None)
             kp, des = orb.compute(img, kp)

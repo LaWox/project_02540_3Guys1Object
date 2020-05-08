@@ -50,7 +50,7 @@ class Camera:
         objP = getObjPoints() # make checkersPoints 
         counter = 1 
         for img in images:
-            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             ret, corners = cv2.findChessboardCorners(gray, BOARD_DIMS, None)
             
             print(f"corners found {ret}")
@@ -67,7 +67,7 @@ class Camera:
         self.objPoints = objPoints
         self.calibrationPoints = imgPoints
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
-
+        print(f'distortion: {dist}')
         self.K = mtx
         return 
 
@@ -149,4 +149,4 @@ def getObjPoints(squareLength = 30):
 if __name__ == "__main__":
     calibrationPath = "data/calibrationImgs/camera0/"
     objPath = "hejehje"
-    camera = Camera(calibrationPath, objPath, calibrated=True)
+    camera = Camera(calibrationPath, objPath, calibrated=False)
