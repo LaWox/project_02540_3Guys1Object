@@ -23,6 +23,7 @@ class Camera:
         self.objPoints = []
         self.cameraNr = cameraNr
         self.imgPaths = self.__setImgPaths()
+        self.rectifiedImages = self.getImages()
 
         if calibrated:
             self.K = self.__getKFromFile() # get calibrated K from file
@@ -67,7 +68,10 @@ class Camera:
         self.objPoints = objPoints
         self.calibrationPoints = imgPoints
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
+
         print(f'distortion: {dist}')
+
+
         self.K = mtx
         return 
 
@@ -132,6 +136,14 @@ class Camera:
     def getCameraNo(self):
         return self.cameraNr
 
+    def setRectifiedImages(self, imgsList):
+        self.rectifiedImages = imgsList
+        return
+
+    def getRectifiedImages(self):
+        return self.rectifiedImages
+
+
 def getObjPoints(squareLength = 30):
     ''' returns manifacturd objPoints for calibration
     Parameters:
@@ -147,6 +159,7 @@ def getObjPoints(squareLength = 30):
     return np.asarray(objPoints)
 
 if __name__ == "__main__":
-    calibrationPath = "data/calibrationImgs/camera0/"
-    objPath = "hejehje"
+
+    calibrationPath = "data/Pictures/Jussi/calibration_jussi_resized/"
+    objPath = "data/Pictures/Jussi/cornflakes_jussi_resized/"
     camera = Camera(calibrationPath, objPath, calibrated=False)

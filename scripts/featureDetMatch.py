@@ -57,6 +57,9 @@ class Point:
     def getDescriptor(self):
         return self.descriptor
 
+
+
+
 class Match:
     ''' Match consisting of two points
     Arguments:
@@ -116,7 +119,8 @@ def getFeatures(rig):
     # extract features for all images in a camera
     for camera in cameras:
         feats = []
-        imgs = camera.getImages()
+        imgs = camera.getRectifiedImages()# get rectified images with camera.getRectifiedImages and get normal with getImages()
+        print(len(imgs))
         if(shouldPrint):
             print(f'Finding features in camera {camera.getCameraNo()}')
         for img in imgs:
@@ -186,8 +190,12 @@ if __name__ == "__main__":
     objPath1 =  "data/objImages/camera0/"
     objPath2 =  "data/objImages/camera1/"
 
+
     camera1 = camera.Camera(cPath1, objPath1, cameraNr = 0, calibrated = True)
     camera2 = camera.Camera(cPath2, objPath2, cameraNr = 1, calibrated = True)
+
+
+
     
     cameras = [camera1, camera2]
     newRig = cameraRig.Rig(cameras, calibrated = True)
