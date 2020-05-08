@@ -230,11 +230,17 @@ if __name__ == "__main__":
     camera3 = Camera(calibrationPath3, objPath3, cameraNr = 2, calibrated=True)
     rig = Rig([camera1,camera2,camera3], calibrated=True)
     rig=rectifyImage(rig)
-    for i in range(0,2):
-        cv2.imshow(str(i),rig.cameras[i].getRectifiedImages()[0])
-        cv2.waitKey(500)
 
 
+    cv2.imshow('0',rig.cameras[0].getRectifiedImages()[0])
+    cv2.resizeWindow('0', 600, 600)
+
+
+    cv2.imshow('1', rig.cameras[1].getRectifiedImages()[0])
+    cv2.resizeWindow('1', 50, 50)
+    cv2.waitKey(0)
+
+    """
     matches=getMatches(rig)
     pointList=[]
 
@@ -252,7 +258,7 @@ if __name__ == "__main__":
     print(np.mean(sumV))
 
     for x in range(0,len(pointList)):
-        np.save(("data/3Dpoints/" + str(x)), pointList[x])
+        np.save(("data/3Dpoints/" + str(x)), pointList[x]) """
 
 
 
