@@ -115,7 +115,8 @@ def getFeatures(rig):
     # extract features for all images in a camera
     for camera in cameras:
         feats = []
-        imgs = camera.getImages()
+        imgs = camera.getRectifiedImages()# get rectified images with camera.getRectifiedImages and get normal with getImages()
+        print(len(imgs))
         if(shouldPrint):
             print(f'finding features in camera {camera.getCameraNo()}')
         for img in imgs:

@@ -41,7 +41,9 @@ def get3dPointsUnrect(matches, rig):
         K2 = matches[x].point2.camera.getK()
 
         #P1=np.concatenate((K1,np.zeros((3,1))),axis=1)
-        P1=np.eye(4)[:3]
+
+        P1=K1@np.eye(4)[:3]
+        #P1 = np.eye(4)[:3]
         P2=K2@Rt
 
         #Triangulation
@@ -166,7 +168,8 @@ def getErrorUnrect(matches, pointsL, rig):
         K2 = matches[x].point2.camera.getK()
 
         #P1 = np.concatenate((K1, np.zeros((3, 1))), axis=1)
-        P1 = np.eye(4)[:3]
+        P1 = K1 @ np.eye(4)[:3]
+        #P1 = np.eye(4)[:3]
         P2 = K2 @ Rt
 
 
@@ -185,7 +188,8 @@ def getErrorUnrect(matches, pointsL, rig):
         sum += error1 + error2
 
         count += 1
-    return sum
+
+    return sum / count
 
 
 
@@ -225,21 +229,27 @@ if __name__ == "__main__":
     camera2 = Camera(calibrationPath2, objPath2, cameraNr = 1, calibrated=True)
     camera3 = Camera(calibrationPath3, objPath3, cameraNr = 2, calibrated=True)
     rig = Rig([camera1,camera2,camera3], calibrated=True)
-    #rig=rectifyImage(rig)
+    rig=rectifyImage(rig)
+    for i in range(0,2):
+        cv2.imshow(str(i),rig.cameras[i].getRectifiedImages()[0])
+        cv2.waitKey(500)
+
+
     matches=getMatches(rig)
     pointList=[]
 
     for match in matches:
         print(len(match))
-        points, color = get3dPointsUnrect(match,rig)
+        points, color = get3dPointsRect(match,rig)
         pointList.append(points)
 
     sumV=np.empty((len(matches)))
     for x in range(0,len(pointList)):
-        sum=getErrorUnrect(matches[x],pointList[x],rig)
+        sum=getErrorRect(matches[x],pointList[x],rig)
         print('The sum is: '+str(sum))
         sumV[x]=sum
-    print(np.sum(sumV))
+    print(sumV)
+    print(np.mean(sumV))
 
     for x in range(0,len(pointList)):
         np.save(("data/3Dpoints/" + str(x)), pointList[x])
