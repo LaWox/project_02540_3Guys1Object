@@ -98,7 +98,7 @@ def rectifyImage(rig):
 
             imgsRect=[]
             for x in range(0,len(imgs)):
-                imgsRect.append(cv2.remap(imgs[x], Xmap, Ymap, cv2.INTER_LINEAR))
+                imgsRect.append(cv2.remap(imgs[x], map1=Xmap, map2=Ymap, interpolation=cv2.INTER_LINEAR))
             cameras[i+1].setRectifiedImages(imgsRect)
     #rig.updateCameras(cameras)
     #https://stackoverflow.com/questions/53192333/problem-with-stereo-rectification-using-opencv-and-python
