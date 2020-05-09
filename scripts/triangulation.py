@@ -5,7 +5,7 @@ import numpy as np
 from camera import Camera
 from cameraRig import Rig
 from featureDetMatch import getMatches
-from imageProcessing import rectifyImage
+from imageProcessing import rectifyImage, rectifyImageTest
 
 #Kasta in bilderna också
 
@@ -42,8 +42,9 @@ def get3dPointsUnrect(matches, rig):
 
         #P1=np.concatenate((K1,np.zeros((3,1))),axis=1)
 
-        P1=K1@np.eye(4)[:3]
-        #P1 = np.eye(4)[:3]
+        #P1=K1@np.eye(4)[:3]
+        #P1=K1@Rt
+        P1 = np.eye(4)[:3]
         P2=K2@Rt
 
         #Triangulation
@@ -166,6 +167,8 @@ def getErrorRect(matches, pointsL, rig):
 def getErrorUnrect(matches, pointsL, rig):
     count = 0
     sum = 0.0
+    error1 = 0.0
+    error2 = 0.0
     for x in range(0,len(matches)):
         cam1 = matches[x].point1.camera.getCameraNo()
         cam2 = matches[x].point2.camera.getCameraNo()
@@ -177,8 +180,9 @@ def getErrorUnrect(matches, pointsL, rig):
         K2 = matches[x].point2.camera.getK()
 
         #P1 = np.concatenate((K1, np.zeros((3, 1))), axis=1)
-        P1 = K1 @ np.eye(4)[:3]
-        #P1 = np.eye(4)[:3]
+        #P1 = K1 @ np.eye(4)[:3]
+        P1 = np.eye(4)[:3]
+        #P1 = K1 @ Rt
         P2 = K2 @ Rt
 
 
@@ -186,19 +190,23 @@ def getErrorUnrect(matches, pointsL, rig):
         points3d=makeNestedList(points3d)
 
         pixel1 = P1 @ points3d
+        if (pixel1[2] == 0.0):
+            pixel1[2] = 0.001
         pixel1 /= pixel1[2]
+
+
         pixel2 = P2 @ points3d
+        if (pixel2[2] == 0.0):
+            pixel2[2] = 0.001
         pixel2 /= pixel2[2]
 
 
-        error1 = np.sqrt(np.sum((coord1 - pixel1[:2].flatten()) ** 2))
-        error2 = np.sqrt(np.sum((coord2 - pixel2[:2].flatten()) ** 2))
-        print('Error in cam1',error1,'Error in cam2',error2)
-        sum += error1 + error2
+        error1 += np.sqrt(np.sum((coord1 - pixel1[:2].flatten()) ** 2))
+        error2 += np.sqrt(np.sum((coord2 - pixel2[:2].flatten()) ** 2))
 
         count += 1
 
-    return sum / count
+    return [error1/count, error2/count]
 
 
 
@@ -239,18 +247,19 @@ if __name__ == "__main__":
     camera3 = Camera(calibrationPath3, objPath3, cameraNr = 2, calibrated=True)
     rig = Rig([camera1,camera2,camera3], calibrated=True)
     rig=rectifyImage(rig)
+    rectList=rectifyImageTest(rig)
 
-    cv2.cv2.namedWindow('0', cv2.WINDOW_NORMAL)
-    cv2.imshow('0',rig.cameras[0].getRectifiedImages()[0])
-    cv2.resizeWindow('0', 500, 500)
+    cv2.cv2.namedWindow('01', cv2.WINDOW_NORMAL)
+    cv2.imshow('01',rectList[0][0])
+    cv2.resizeWindow('01', 500, 500)
 
-    cv2.cv2.namedWindow('1', cv2.WINDOW_NORMAL)
-    cv2.imshow('1', rig.cameras[1].getRectifiedImages()[0])
-    cv2.resizeWindow('1', 500, 500)
+    cv2.cv2.namedWindow('02', cv2.WINDOW_NORMAL)
+    cv2.imshow('02', rectList[1][0])
+    cv2.resizeWindow('02', 500, 500)
 
-    cv2.cv2.namedWindow('2', cv2.WINDOW_NORMAL)
-    cv2.imshow('2', rig.cameras[2].getRectifiedImages()[0])
-    cv2.resizeWindow('2', 500, 500)
+    cv2.cv2.namedWindow('12', cv2.WINDOW_NORMAL)
+    cv2.imshow('12', rectList[2][0])
+    cv2.resizeWindow('12', 500, 500)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 

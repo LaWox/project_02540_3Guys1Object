@@ -83,6 +83,7 @@ def rectifyImage(rig):
         """
     cameras=rig.getCameras()
 
+    rectList=[]
     for i in range(0,len(cameras)):
         for j in range(i+1,len(cameras)) :
             imgs=cameras[i].getImages()
@@ -99,11 +100,60 @@ def rectifyImage(rig):
             imgsRect=[]
             for x in range(0,len(imgs)):
                 imgsRect.append(cv2.remap(imgs[x], map1=Xmap, map2=Ymap, interpolation=cv2.INTER_LINEAR))
-            cameras[i+1].setRectifiedImages(imgsRect)
+            rectList.append(imgsRect)
+            #cameras[i].setRectifiedImages(imgsRect)
+    cameras[0].setRectifiedImages(rectList[0])
+    cameras[1].setRectifiedImages(rectList[2])
+    cameras[2].setRectifiedImages(rectList[1])
+
     #rig.updateCameras(cameras)
     #https://stackoverflow.com/questions/53192333/problem-with-stereo-rectification-using-opencv-and-python
 
     return rig
+
+def rectifyImageTest(rig):
+    """ rectifies all images in a camera
+        Params:
+            * rig; rig object, the camera rig containing the rectification transform
+            * camera; a camera object, this is the reference camera
+            * otherCameraNumber; int, the number of the other camera
+        Outputs:
+            * Returns imgsRect, a list containing the rectifies images
+        """
+    cameras=rig.getCameras()
+
+    rectList=[]
+    for i in range(0,len(cameras)):
+        for j in range(i+1,len(cameras)):
+            imgs1=cameras[i].getImages()
+            imgs2 = cameras[j].getImages()
+            cam1 = cameras[i].getCameraNo()
+            cam2 = cameras[j].getCameraNo()
+            R1 = rig.getRectifyTransform(cam1, cam2)[0]
+            P1 = rig.getProjectionTransformRectified(cam1, cam2)[0]
+            R2 = rig.getRectifyTransform(cam1, cam2)[1]
+            P2 = rig.getProjectionTransformRectified(cam1, cam2)[1]
+
+            w,h = imgs1[0].shape[0:2]
+            size= (h,w)
+
+            Ymap1, Xmap1= cv2.initUndistortRectifyMap(cameras[i].getK(), cameras[i].getDistCoeff(),R1,P1,size,cv2.CV_32FC1)
+            Ymap2, Xmap2 = cv2.initUndistortRectifyMap(cameras[j].getK(), cameras[j].getDistCoeff(), R2, P2,
+                                                       size, cv2.CV_32FC1)
+
+            imgsRect=[]
+            for x in range(0,15):
+                img1=cv2.remap(imgs1[x], map1=Xmap1, map2=Ymap1, interpolation=cv2.INTER_LINEAR)
+                img2 = cv2.remap(imgs2[x], map1=Xmap2, map2=Ymap2, interpolation=cv2.INTER_LINEAR)
+                imgsRect.append(np.concatenate((img1, img2), axis=1))
+            rectList.append(imgsRect)
+            #cameras[i].setRectifiedImages(imgsRect)
+
+
+    #rig.updateCameras(cameras)
+    #https://stackoverflow.com/questions/53192333/problem-with-stereo-rectification-using-opencv-and-python
+
+    return rectList
 
 
 

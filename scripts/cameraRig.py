@@ -61,7 +61,7 @@ class Rig:
                     None,
                     None
                     )"""
-
+                #criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 100, 0.001)
                 retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, t, E, F = cv2.stereoCalibrate(
                                    objectPoints=camera1.getObjPoints(),
                                    imagePoints1=camera1.getCalibrationPoints(), # get calibration points
