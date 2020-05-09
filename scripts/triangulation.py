@@ -86,7 +86,8 @@ def get3dPointsRect(matches, rig):
 
         P1 = rig.getProjectionTransformRectified(cam1,cam2)[0]
         P2 = rig.getProjectionTransformRectified(cam1,cam2)[1]
-        #P1 = np.eye(4)[:3]
+        #K1 = matches[x].point1.camera.getK()
+        #P1 = K1 @ np.eye(4)[:3]
 
         #Triangulation
         Q=cv2.triangulatePoints(P1,P2,coord1,coord2)
@@ -127,7 +128,8 @@ def get3dPointsRect(matches, rig):
 
 def getErrorRect(matches, pointsL, rig):
     count = 0
-    sum = 0.0
+    error1 = 0.0
+    error2 = 0.0
     for x in range(0,len(matches)):
         cam1 = matches[x].point1.camera.getCameraNo()
         cam2 = matches[x].point2.camera.getCameraNo()
@@ -135,6 +137,8 @@ def getErrorRect(matches, pointsL, rig):
         coord2 = matches[x].point2.getCoords()
         P1 = rig.getProjectionTransformRectified(cam1, cam2)[0]
         P2 = rig.getProjectionTransformRectified(cam1, cam2)[1]
+        #K1 = matches[x].point1.camera.getK()
+        #P1 = K1 @ np.eye(4)[:3]
 
 
         points3d = np.concatenate((pointsL[x], np.array([1])))
@@ -146,13 +150,18 @@ def getErrorRect(matches, pointsL, rig):
         pixel2 /= pixel2[2]
 
 
-        error1 = np.sqrt(np.sum((coord1 - pixel1[:2].flatten()) ** 2))
-        error2 = np.sqrt(np.sum((coord2 - pixel2[:2].flatten()) ** 2))
-        print('Error in cam1',error1,'Error in cam2',error2)
-        sum += error1 + error2
+        error1 += np.sqrt(np.sum((coord1 - pixel1[:2].flatten()) ** 2))
+        error2 += np.sqrt(np.sum((coord2 - pixel2[:2].flatten()) ** 2))
+        #print('Error in cam1',error1,'Error in cam2',error2)
+        #sum += error1 + error2
+
+
 
         count += 1
-    return sum
+    error1Mean = error1/count
+    error2Mean = error2/count
+    #return sum / count
+    return [error1Mean,error2Mean]
 
 def getErrorUnrect(matches, pointsL, rig):
     count = 0
@@ -231,16 +240,21 @@ if __name__ == "__main__":
     rig = Rig([camera1,camera2,camera3], calibrated=True)
     rig=rectifyImage(rig)
 
-
+    cv2.cv2.namedWindow('0', cv2.WINDOW_NORMAL)
     cv2.imshow('0',rig.cameras[0].getRectifiedImages()[0])
-    cv2.resizeWindow('0', 600, 600)
+    cv2.resizeWindow('0', 500, 500)
 
-
+    cv2.cv2.namedWindow('1', cv2.WINDOW_NORMAL)
     cv2.imshow('1', rig.cameras[1].getRectifiedImages()[0])
-    cv2.resizeWindow('1', 50, 50)
-    cv2.waitKey(0)
+    cv2.resizeWindow('1', 500, 500)
 
-    """
+    cv2.cv2.namedWindow('2', cv2.WINDOW_NORMAL)
+    cv2.imshow('2', rig.cameras[2].getRectifiedImages()[0])
+    cv2.resizeWindow('2', 500, 500)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
     matches=getMatches(rig)
     pointList=[]
 
@@ -249,16 +263,16 @@ if __name__ == "__main__":
         points, color = get3dPointsRect(match,rig)
         pointList.append(points)
 
-    sumV=np.empty((len(matches)))
+    sumV=np.empty((len(matches),2))
     for x in range(0,len(pointList)):
-        sum=getErrorRect(matches[x],pointList[x],rig)
-        print('The sum is: '+str(sum))
-        sumV[x]=sum
+        errCam1, errCam2=getErrorRect(matches[x],pointList[x],rig)
+        print('The average error in cam1', errCam1, 'The average error in cam2', errCam2)
+        sumV[x]=np.array([errCam1,errCam2])
     print(sumV)
     print(np.mean(sumV))
 
     for x in range(0,len(pointList)):
-        np.save(("data/3Dpoints/" + str(x)), pointList[x]) """
+        np.save(("data/3Dpoints/" + str(x)), pointList[x])
 
 
 

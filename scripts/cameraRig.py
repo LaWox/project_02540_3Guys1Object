@@ -51,7 +51,7 @@ class Rig:
                 camera2 = self.cameras[j]
 
 
-                retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, t, E, F = cv2.stereoCalibrate(
+                """retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, t, E, F = cv2.stereoCalibrate(
                     camera1.getObjPoints(),
                     camera1.getCalibrationPoints(), # get calibration points
                     camera2.getCalibrationPoints(), 
@@ -60,7 +60,18 @@ class Rig:
                     camera2.getK(),
                     None,
                     None
-                    )
+                    )"""
+
+                retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, t, E, F = cv2.stereoCalibrate(
+                                   objectPoints=camera1.getObjPoints(),
+                                   imagePoints1=camera1.getCalibrationPoints(), # get calibration points
+                                   imagePoints2=camera2.getCalibrationPoints(),
+                                   imageSize=IMG_SHAPE,
+                                   cameraMatrix1=camera1.getK(), # get the camera matrixes
+                                   cameraMatrix2=camera2.getK(),
+                                   distCoeffs1=camera1.getDistCoeff(),
+                                   distCoeffs2=camera2.getDistCoeff()
+                                   )
 
                 # set and save the homography
                 self.homoGraphies[str(i) + str(j)] = (np.concatenate((R, t), axis = 1))

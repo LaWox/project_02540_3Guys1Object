@@ -24,17 +24,22 @@ class Camera:
         self.cameraNr = cameraNr
         self.imgPaths = self.__setImgPaths()
         self.rectifiedImages = self.getImages()
+        self.distC=[]
 
         if calibrated:
             self.K = self.__getKFromFile() # get calibrated K from file
             self.calibrationPoints = self.__getCalibrationPointsFromFile()
             self.objPoints = self.__getObjPointsFromFile()
+            self.distC = self.__getDistCoeffFromFile()
 
         else: # save new data if not already calculated
             self.__calibrate() 
             self.__saveK() 
             self.__saveCalibrationPoints()
             self.__saveObjPoints()
+            self.__saveDistCoeff()
+
+
         return 
 
     def __calibrate(self):
@@ -68,6 +73,7 @@ class Camera:
         self.objPoints = objPoints
         self.calibrationPoints = imgPoints
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
+        self.distC=dist
 
         print(f'distortion: {dist}')
 
@@ -143,6 +149,18 @@ class Camera:
     def getRectifiedImages(self):
         return self.rectifiedImages
 
+    def getDistCoeff(self):
+        return self.distC
+
+    def __saveDistCoeff(self):
+        np.save("data/cameraData/camera" + str(self.cameraNr) + '/distCoeff', self.distC)
+
+    def __getDistCoeffFromFile(self):
+        dist = np.load("data/cameraData/camera" + str(self.cameraNr) + '/distCoeff' + '.npy')
+        return dist
+
+
+
 
 def getObjPoints(squareLength = 30):
     ''' returns manifacturd objPoints for calibration
@@ -160,6 +178,13 @@ def getObjPoints(squareLength = 30):
 
 if __name__ == "__main__":
 
-    calibrationPath = "data/Pictures/Jussi/calibration_jussi_resized/"
-    objPath = "data/Pictures/Jussi/cornflakes_jussi_resized/"
-    camera = Camera(calibrationPath, objPath, calibrated=False)
+    calibrationPath1 = "data/Pictures/Jussi/calibration_jussi_resized/"
+    objPath1 = "data/Pictures/Jussi/cornflakes_jussi_resized/"
+    calibrationPath2 = "data/Pictures/Platon/calibration_platon_resized/"
+    objPath2 = "data/Pictures/platon/cornflakes_platon_resized/"
+    calibrationPath3 = "data/Pictures/William/calibration_william/"
+    objPath3 = "data/Pictures/William/cornflakes_william/"
+
+    camera1 = Camera(calibrationPath1, objPath1,  cameraNr = 0, calibrated=False)
+    camera2 = Camera(calibrationPath2, objPath2, cameraNr = 1, calibrated=False)
+    camera3 = Camera(calibrationPath3, objPath3,  cameraNr = 2,calibrated=False)

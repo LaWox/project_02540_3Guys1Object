@@ -90,11 +90,12 @@ def rectifyImage(rig):
             cam2 = cameras[j].getCameraNo()
             R = rig.getRectifyTransform(cam1, cam2)[0]
             P = rig.getProjectionTransformRectified(cam1, cam2)[0]
-            d = rig.getDistCoeff(cam1,cam2)[0]
-            print(d)
+            #d = rig.getDistCoeff(cam1,cam2)[0]
+            #print(d)
             #print(cameras[i].getK())
             #print(R)
-            Ymap, Xmap=cv2.initUndistortRectifyMap(cameras[i].getK(), d,R,P,imgs[0].shape[0:2],cv2.CV_32FC1)
+            Ymap, Xmap=cv2.initUndistortRectifyMap(cameras[i].getK(), cameras[i].getDistCoeff(),R,P,imgs[0].shape[0:2],cv2.CV_32FC1)
+
             imgsRect=[]
             for x in range(0,len(imgs)):
                 imgsRect.append(cv2.remap(imgs[x], Xmap, Ymap, cv2.INTER_LINEAR))
