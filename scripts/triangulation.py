@@ -2,10 +2,14 @@
 
 import cv2 
 import numpy as np
+from camera import Camera
+from cameraRig import Rig
+from featureDetMatch import getMatches
+from imageProcessing import rectifyImage
 
 #Kasta in bilderna också
-"""
-def get3dPoints(pList, featuresList):
+
+"""def get3dPoints(pList, featuresList):
     #points3d=np.empty((int(np.floor(len(pList)/2)),len(featuresList),len(featuresList[0])))
     points3D=[]
     count=0
@@ -18,26 +22,87 @@ def get3dPoints(pList, featuresList):
         points3D.append(Q[:])
     return points3D"""
 
-def get3dPoints(pList, featuresList):
-    points3d = np.empty((len(featuresList),3))
-    pointsColor = np.empty((len(featuresList),3))
+def get3dPointsUnrect(matches, rig):
+    points3d = np.empty((len(matches),3))
+    pointsColor = np.empty((len(matches),3))
     count=0
 
     # TODO: Fix how we get the projection matrix
 
-    for x in range(0,len(pList)):
+
+    for x in range(0,len(matches)):
+        cam1=matches[x].point1.camera.getCameraNo()
+        cam2=matches[x].point2.camera.getCameraNo()
+        coord1 = makeNestedList(matches[x].point1.getCoords())
+        coord2 = makeNestedList(matches[x].point2.getCoords())
+
+        Rt = rig.getRt(cam1,cam2)
+        K1 = matches[x].point1.camera.getK()
+        K2 = matches[x].point2.camera.getK()
+
+        #P1=np.concatenate((K1,np.zeros((3,1))),axis=1)
+
+        P1=K1@np.eye(4)[:3]
+        #P1 = np.eye(4)[:3]
+        P2=K2@Rt
 
         #Triangulation
-        Q=cv2.triangulatePoints(pList[x].P1,pList[x].P2,featuresList[x].point1.getCoords(),featuresList[x].point2.getCoords())
+        Q=cv2.triangulatePoints(P1,P2,coord1,coord2)
+        #print(Q)
         Q/= Q[3] #diving by w
-        points3d[count]=Q[:3] #becomes a 3D vector, w is removed
+        #print(Q)
+
+        points3d[count]=np.transpose(Q[:3])[0] #becomes a 3D vector, w is removed
+        #print(points3d[count])
 
         #Storing the color
-        pointsColor[count]=featuresList[x].getColor()
+        #pointsColor[count]=matches[x].getColor()
 
         count +=1
 
-    return [points3D, pointsColor]
+    return [points3d, pointsColor]
+
+def makeNestedList(list):
+    newList = np.empty((len(list), 1))
+    for x in range(0,len(list)):
+        newList[x][0] = list[x]
+
+    return newList
+
+
+def get3dPointsRect(matches, rig):
+    points3d = np.empty((len(matches),3))
+    pointsColor = np.empty((len(matches),3))
+    count=0
+
+    # TODO: Fix how we get the projection matrix
+
+
+    for x in range(0,len(matches)):
+        cam1=matches[x].point1.camera.getCameraNo()
+        cam2=matches[x].point2.camera.getCameraNo()
+        coord1 = makeNestedList(matches[x].point1.getCoords())
+        coord2 = makeNestedList(matches[x].point2.getCoords())
+
+        P1 = rig.getProjectionTransformRectified(cam1,cam2)[0]
+        P2 = rig.getProjectionTransformRectified(cam1,cam2)[1]
+        #P1 = np.eye(4)[:3]
+
+        #Triangulation
+        Q=cv2.triangulatePoints(P1,P2,coord1,coord2)
+        #print(Q)
+        Q/= Q[3] #diving by w
+        #print(Q)
+
+        points3d[count]=np.transpose(Q[:3])[0] #becomes a 3D vector, w is removed
+        #print(points3d[count])
+
+        #Storing the color
+        #pointsColor[count]=matches[x].getColor()
+
+        count +=1
+
+    return [points3d, pointsColor]
 
 """def getError(pList,featList, pointsL):
     count=0;
@@ -60,28 +125,72 @@ def get3dPoints(pList, featuresList):
 
         count += 1"""
 
-def getError(featList, pointsL):
+def getErrorRect(matches, pointsL, rig):
     count = 0
     sum = 0.0
-    for x in range(0,len(featList)):
-        # TODO: GET PROJECTION MATRIX 1
-        # TODO: GET PROJECTION MATRIX 2
-        f1=featList[x].point1.getCoords()
-        f2=featList[x].point2.getCoords()
-        points3d=pointsL[x]
+    for x in range(0,len(matches)):
+        cam1 = matches[x].point1.camera.getCameraNo()
+        cam2 = matches[x].point2.camera.getCameraNo()
+        coord1 = matches[x].point1.getCoords()
+        coord2 = matches[x].point2.getCoords()
+        P1 = rig.getProjectionTransformRectified(cam1, cam2)[0]
+        P2 = rig.getProjectionTransformRectified(cam1, cam2)[1]
+
+
+        points3d = np.concatenate((pointsL[x], np.array([1])))
+        points3d=makeNestedList(points3d)
 
         pixel1 = P1 @ points3d
         pixel1 /= pixel1[2]
         pixel2 = P2 @ points3d
         pixel2 /= pixel2[2]
 
-        error1 = np.sqrt(np.sum((f1 - pixel1[:2]) ** 2))
-        error2 = np.sqrt(np.sum((f2 - pixel2[:2]) ** 2))
+
+        error1 = np.sqrt(np.sum((coord1 - pixel1[:2].flatten()) ** 2))
+        error2 = np.sqrt(np.sum((coord2 - pixel2[:2].flatten()) ** 2))
         print('Error in cam1',error1,'Error in cam2',error2)
         sum += error1 + error2
 
         count += 1
     return sum
+
+def getErrorUnrect(matches, pointsL, rig):
+    count = 0
+    sum = 0.0
+    for x in range(0,len(matches)):
+        cam1 = matches[x].point1.camera.getCameraNo()
+        cam2 = matches[x].point2.camera.getCameraNo()
+        coord1 = matches[x].point1.getCoords()
+        coord2 = matches[x].point2.getCoords()
+
+        Rt = rig.getRt(cam1, cam2)
+        K1 = matches[x].point1.camera.getK()
+        K2 = matches[x].point2.camera.getK()
+
+        #P1 = np.concatenate((K1, np.zeros((3, 1))), axis=1)
+        P1 = K1 @ np.eye(4)[:3]
+        #P1 = np.eye(4)[:3]
+        P2 = K2 @ Rt
+
+
+        points3d = np.concatenate((pointsL[x], np.array([1])))
+        points3d=makeNestedList(points3d)
+
+        pixel1 = P1 @ points3d
+        pixel1 /= pixel1[2]
+        pixel2 = P2 @ points3d
+        pixel2 /= pixel2[2]
+
+
+        error1 = np.sqrt(np.sum((coord1 - pixel1[:2].flatten()) ** 2))
+        error2 = np.sqrt(np.sum((coord2 - pixel2[:2].flatten()) ** 2))
+        print('Error in cam1',error1,'Error in cam2',error2)
+        sum += error1 + error2
+
+        count += 1
+
+    return sum / count
+
 
 
 
@@ -107,4 +216,52 @@ getError([P1,P2],[a3xN,b3xN],points)"""
 
 
 if __name__ == "__main__":
+
+
+
+    calibrationPath1 = "data/cameraData/camera0/"
+    calibrationPath2 = "data/cameraData/camera1/"
+    calibrationPath3 = "data/cameraData/camera2/"
+    objPath1 = "data/Pictures/Jussi/cornflakes_jussi_resized/"
+    objPath2 = "data/Pictures/Platon/cornflakes_platon_resized/"
+    objPath3 = "data/Pictures/William/cornflakes_william/"
+    camera1 = Camera(calibrationPath1, objPath1, cameraNr = 0, calibrated=True)
+    camera2 = Camera(calibrationPath2, objPath2, cameraNr = 1, calibrated=True)
+    camera3 = Camera(calibrationPath3, objPath3, cameraNr = 2, calibrated=True)
+    rig = Rig([camera1,camera2,camera3], calibrated=True)
+    rig=rectifyImage(rig)
+    for i in range(0,2):
+        cv2.imshow(str(i),rig.cameras[i].getRectifiedImages()[0])
+        cv2.waitKey(500)
+
+
+    matches=getMatches(rig)
+    pointList=[]
+
+    for match in matches:
+        print(len(match))
+        points, color = get3dPointsRect(match,rig)
+        pointList.append(points)
+
+    sumV=np.empty((len(matches)))
+    for x in range(0,len(pointList)):
+        sum=getErrorRect(matches[x],pointList[x],rig)
+        print('The sum is: '+str(sum))
+        sumV[x]=sum
+    print(sumV)
+    print(np.mean(sumV))
+
+    for x in range(0,len(pointList)):
+        np.save(("data/3Dpoints/" + str(x)), pointList[x])
+
+
+
+
+
+    print('Done')
+
+
+
+
+
     pass

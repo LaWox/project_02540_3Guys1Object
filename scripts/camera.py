@@ -22,8 +22,9 @@ class Camera:
         self.calibrationPoints = []
         self.objPoints = []
         self.cameraNr = cameraNr
-        
         self.imgPaths = self.__setImgPaths()
+        self.rectifiedImages = self.getImages()
+
         if calibrated:
             self.K = self.__getKFromFile() # get calibrated K from file
             self.calibrationPoints = self.__getCalibrationPointsFromFile()
@@ -50,7 +51,7 @@ class Camera:
         objP = getObjPoints() # make checkersPoints 
         counter = 1 
         for img in images:
-            gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY)
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
             ret, corners = cv2.findChessboardCorners(gray, BOARD_DIMS, None)
             
             print(f"corners found {ret}")
@@ -67,6 +68,9 @@ class Camera:
         self.objPoints = objPoints
         self.calibrationPoints = imgPoints
         ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objPoints, imgPoints, gray.shape[::-1],None,None)
+
+        print(f'distortion: {dist}')
+
 
         self.K = mtx
         return 
@@ -98,7 +102,7 @@ class Camera:
         return images 
     
     def __setImgPaths(self):
-        images = [str(file) for file in glob.glob(self.objImgPath + "*.png")]
+        images = [str(file) for file in glob.glob(self.objImgPath + "*.jpg")]
         return images
 
     def getCalibrationPoints(self):
@@ -132,6 +136,14 @@ class Camera:
     def getCameraNo(self):
         return self.cameraNr
 
+    def setRectifiedImages(self, imgsList):
+        self.rectifiedImages = imgsList
+        return
+
+    def getRectifiedImages(self):
+        return self.rectifiedImages
+
+
 def getObjPoints(squareLength = 30):
     ''' returns manifacturd objPoints for calibration
     Parameters:
@@ -147,6 +159,7 @@ def getObjPoints(squareLength = 30):
     return np.asarray(objPoints)
 
 if __name__ == "__main__":
-    calibrationPath = "data/calibrationImgs/camera0/"
-    objPath = "hejehje"
-    camera = Camera(calibrationPath, objPath, calibrated=True)
+
+    calibrationPath = "data/Pictures/Jussi/calibration_jussi_resized/"
+    objPath = "data/Pictures/Jussi/cornflakes_jussi_resized/"
+    camera = Camera(calibrationPath, objPath, calibrated=False)

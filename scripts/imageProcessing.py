@@ -72,12 +72,37 @@ def outputImgs(paths,imgs):
     print("The pictures were successfully outputted")
 
 
-def rectifyImage():
-    #https://www.programcreek.com/python/example/89312/cv2.stereoRectify
-    #https://stackoverflow.com/questions/27431062/stereocalibration-in-opencv-on-python
-    #get a rectify transform from camera rig
-    #transform it with a picture
-    return
+def rectifyImage(rig):
+    """ rectifies all images in a camera
+        Params:
+            * rig; rig object, the camera rig containing the rectification transform
+            * camera; a camera object, this is the reference camera
+            * otherCameraNumber; int, the number of the other camera
+        Outputs:
+            * Returns imgsRect, a list containing the rectifies images
+        """
+    cameras=rig.getCameras()
+
+    for i in range(0,len(cameras)):
+        for j in range(i+1,len(cameras)) :
+            imgs=cameras[i].getImages()
+            cam1 = cameras[i].getCameraNo()
+            cam2 = cameras[j].getCameraNo()
+            R = rig.getRectifyTransform(cam1, cam2)[0]
+            P = rig.getProjectionTransformRectified(cam1, cam2)[0]
+            d = rig.getDistCoeff(cam1,cam2)[0]
+            print(d)
+            #print(cameras[i].getK())
+            #print(R)
+            Ymap, Xmap=cv2.initUndistortRectifyMap(cameras[i].getK(), d,R,P,imgs[0].shape[0:2],cv2.CV_32FC1)
+            imgsRect=[]
+            for x in range(0,len(imgs)):
+                imgsRect.append(cv2.remap(imgs[x], Xmap, Ymap, cv2.INTER_LINEAR))
+            cameras[i+1].setRectifiedImages(imgsRect)
+    #rig.updateCameras(cameras)
+    #https://stackoverflow.com/questions/53192333/problem-with-stereo-rectification-using-opencv-and-python
+
+    return rig
 
 
 

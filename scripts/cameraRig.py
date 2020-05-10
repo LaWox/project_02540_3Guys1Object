@@ -3,7 +3,7 @@ import camera
 import cv2 
 import matplotlib.pyplot as plt
 
-IMG_SHAPE = (1850, 1137)
+#IMG_SHAPE = (1850, 1137)
 
 class Rig:
     ''' Rig containing several cameras
@@ -15,9 +15,13 @@ class Rig:
         self.cameras = cameras
         self.homoGraphies = {}
         self.objP = cameras[0].getObjPoints() # uses square len of 30
-        self.Rt = None #TODO: implement Rt
+        self.Rt = {} #TODO: implement Rt
         self.rectifyTranformations = {} #TODO: fix this
+        self.projectionTransformRectified = {}
+        self.distCoeff = {}
         self.verbose = verbose
+
+
 
         # init homographies between the cameras
         if not calibrated:
@@ -36,11 +40,16 @@ class Rig:
         '''
         noCameras = len(self.cameras) # number of cameras in rig setup 
         rectifyTransform = np.empty((2, 3, 3))
+        projectionTransformRectified = np.empty((2, 3, 4)) # A matrix for storing projection matrixes from stereoRectify()
+        distCoeff=np.empty((2,5))
+        Rt = np.empty((3,4))
 
+        IMG_SHAPE = self.cameras[0].getImages()[0].shape[0:2]
         for i in range(noCameras):
             for j in range(i+1, noCameras):
                 camera1 = self.cameras[i]
                 camera2 = self.cameras[j]
+
 
                 retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, t, E, F = cv2.stereoCalibrate(
                     camera1.getObjPoints(),
@@ -55,9 +64,15 @@ class Rig:
 
                 # set and save the homography
                 self.homoGraphies[str(i) + str(j)] = (np.concatenate((R, t), axis = 1))
-                np.save(("data/homographies/" + str(i) + str(j)), F) #TODO this doesn't make any sense right now   
+                np.save(("data/homographies/" + str(i) + str(j)), F) #TODO this doesn't make any sense right now
 
-                # set and save rectifyTransorm
+                #Set and save Rt
+                Rt[:,:3]=R
+                Rt[:,3]=t.flatten()
+                self.Rt[str(i) + str(j)]=Rt
+                np.save(("data/Rt/" + str(i) + str(j)), Rt)
+
+                """# set and save rectifyTransorm
                 returns = cv2.stereoRectify(
                     camera1.getK(), 
                     distCoeffs1, 
@@ -68,9 +83,32 @@ class Rig:
                     t,
                     rectifyTransform[0], # set rectifyTransorms in here
                     rectifyTransform[1]
-                )
+                )"""
+                # set and save rectifyTransorm
+                rect1,rect2, P1, P2, disparityToDepthMap, ROI_1, ROI_2 = cv2.stereoRectify(
+                    camera1.getK(),
+                    distCoeffs1,
+                    camera2.getK(),
+                    distCoeffs2,
+                    IMG_SHAPE,
+                    R,
+                    t)
+                rectifyTransform[0] = rect1 # set rectifyTransorms in here
+                rectifyTransform[1] = rect2
+                projectionTransformRectified[0] = P1
+                projectionTransformRectified[1] = P2
+                distCoeff[0]=distCoeffs1
+                distCoeff[1]=distCoeffs2
+
+
+
                 self.rectifyTranformations[str(i) + str(j)] = (rectifyTransform)
-                np.save(("data/rectifyTransforms/" + str(i) + str(j)), rectifyTransform)    
+                np.save(("data/rectifyTransforms/" + str(i) + str(j)), rectifyTransform)
+                self.projectionTransformRectified[str(i) + str(j)] = (projectionTransformRectified)
+                np.save(("data/projectionTransformRectified/" + str(i) + str(j)), projectionTransformRectified)
+                self.distCoeff[str(i) + str(j)]=distCoeff
+                np.save(("data/distCoeff/" + str(i) + str(j)), distCoeff)
+
 
     def getCameras(self):
         return self.cameras
@@ -87,7 +125,11 @@ class Rig:
             for j in range(i+1, noCameras):
                 nr = str(i) + str(j)
                 self.homoGraphies[nr] = np.load("data/homographies/" + nr + '.npy')
-                self.rectifyTranformations[nr] = np.load("data/rectifyTransforms/" + nr + '.npy') 
+                self.rectifyTranformations[nr] = np.load("data/rectifyTransforms/" + nr + '.npy')
+                self.projectionTransformRectified[nr] = np.load("data/projectionTransformRectified/" + nr + '.npy')
+                self.distCoeff[nr] = np.load("data/distCoeff/" + nr + '.npy')
+                self.Rt[nr] = np.load("data/Rt/"+ nr + ".npy")
+
     
     def getHomography(self, cam1, cam2):
         ''' Returns homography between camera1 and camera 1
@@ -99,21 +141,43 @@ class Rig:
         '''
         return self.homoGraphies[str(cam1) + str(cam2)]
 
-    def getRt(self):
-        return self.Rt
+    def getRt(self, cameraNo1, cameraNo2):
+        nr = str(cameraNo1) + str(cameraNo2)
+        return self.Rt[nr]
     
     def getRectifyTransform(self, cameraNo1, cameraNo2):
         nr = str(cameraNo1) + str(cameraNo2)
         return self.rectifyTranformations[nr]
 
-if __name__ == "__main__":
-    cPath1 = "data/calibrationImgs/camera0/"
-    cPath2 = "data/calibrationImgs/camera1/"
+    def getProjectionTransformRectified(self, cameraNo1, cameraNo2):
+        nr = str(cameraNo1) + str(cameraNo2)
+        return self.projectionTransformRectified[nr]
 
-    camera1 = camera.Camera(cPath1, "hejehj", cameraNr = 0, calibrated = True)
-    camera2 = camera.Camera(cPath2, "hejehj", cameraNr = 1, calibrated = True)
+    def getDistCoeff(self,cameraNo1, cameraNo2):
+        nr = str(cameraNo1) + str(cameraNo2)
+        return self.distCoeff[nr]
+
+    def updateCameras(self, cameras):
+        self.cameras=cameras
+        return
+
+
+
+if __name__ == "__main__":
+
+    cPath1 = "data/cameraData/camera0/"
+    cPath2 = "data/cameraData/camera1/"
+    cPath3 = "data/cameraData/camera2/"
+    objPath1 = "data/Pictures/Jussi/cornflakes_jussi_resized/"
+    objPath2 = "data/Pictures/Platon/cornflakes_platon_resized/"
+    objPath3 = "data/Pictures/William/cornflakes_william/"
+
+    camera1 = camera.Camera(cPath1, objPath1, cameraNr = 0, calibrated = True)
+    camera2 = camera.Camera(cPath2, objPath2, cameraNr = 1, calibrated = True)
+    camera3 = camera.Camera(cPath3, objPath3, cameraNr=2, calibrated=True)
     
-    cameras = [camera1, camera2]
-    newRig = Rig(cameras, calibrated = True)
+    cameras = [camera1, camera2, camera3]
+    newRig = Rig(cameras, calibrated = False)
     rt = newRig.getHomography(0, 1)
-    rec = newRig.getRectifyTransform(0, 1)
+    rec = newRig.getRectifyTransform(0, 2)
+    P = newRig.getProjectionTransformRectified(0,2)
