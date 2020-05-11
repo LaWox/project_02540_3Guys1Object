@@ -20,8 +20,7 @@ class Rig:
         self.projectionTransformRectified = {}
         self.distCoeff = {}
         self.verbose = verbose
-
-
+        self.Q = {}
 
         # init homographies between the cameras
         if not calibrated:
@@ -49,7 +48,6 @@ class Rig:
             for j in range(i+1, noCameras):
                 camera1 = self.cameras[i]
                 camera2 = self.cameras[j]
-
 
                 retval, cameraMatrix1, distCoeffs1, cameraMatrix2, distCoeffs2, R, t, E, F = cv2.stereoCalibrate(
                     camera1.getObjPoints(),
@@ -93,6 +91,7 @@ class Rig:
                     IMG_SHAPE,
                     R,
                     t)
+
                 rectifyTransform[0] = rect1 # set rectifyTransorms in here
                 rectifyTransform[1] = rect2
                 projectionTransformRectified[0] = P1
@@ -100,16 +99,18 @@ class Rig:
                 distCoeff[0]=distCoeffs1
                 distCoeff[1]=distCoeffs2
 
-
-
                 self.rectifyTranformations[str(i) + str(j)] = (rectifyTransform)
                 np.save(("data/rectifyTransforms/" + str(i) + str(j)), rectifyTransform)
+                
                 self.projectionTransformRectified[str(i) + str(j)] = (projectionTransformRectified)
                 np.save(("data/projectionTransformRectified/" + str(i) + str(j)), projectionTransformRectified)
-                self.distCoeff[str(i) + str(j)]=distCoeff
+                
+                self.distCoeff[str(i) + str(j)] = distCoeff
                 np.save(("data/distCoeff/" + str(i) + str(j)), distCoeff)
 
-
+                self.Q[str(i) + str(j)] = disparityToDepthMap
+                np.save(("data/Q/" + str(i) + str(j)), disparityToDepthMap)
+                
     def getCameras(self):
         return self.cameras
 
@@ -129,6 +130,7 @@ class Rig:
                 self.projectionTransformRectified[nr] = np.load("data/projectionTransformRectified/" + nr + '.npy')
                 self.distCoeff[nr] = np.load("data/distCoeff/" + nr + '.npy')
                 self.Rt[nr] = np.load("data/Rt/"+ nr + ".npy")
+                self.Q[nr] = np.load("data/Q/" + nr + ".npy")
 
     
     def getHomography(self, cam1, cam2):
@@ -156,6 +158,9 @@ class Rig:
     def getDistCoeff(self,cameraNo1, cameraNo2):
         nr = str(cameraNo1) + str(cameraNo2)
         return self.distCoeff[nr]
+
+    def getQ(self, cameraNo1, cameraNo2):
+        return self.Q[str(cameraNo1) + str(cameraNo2)]   
 
     def updateCameras(self, cameras):
         self.cameras=cameras

@@ -58,8 +58,6 @@ class Point:
         return self.descriptor
 
 
-
-
 class Match:
     ''' Match consisting of two points
     Arguments:

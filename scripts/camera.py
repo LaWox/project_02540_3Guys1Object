@@ -23,7 +23,7 @@ class Camera:
         self.objPoints = []
         self.cameraNr = cameraNr
         self.imgPaths = self.__setImgPaths()
-        self.rectifiedImages = self.getImages()
+        self.rectifiedImages = None# self.getImages() TODO: i'm getting out of memory error from this one
 
         if calibrated:
             self.K = self.__getKFromFile() # get calibrated K from file
