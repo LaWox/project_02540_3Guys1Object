@@ -83,7 +83,7 @@ class Rig:
                 self.Rt[str(i) + str(j)]=Rt
                 np.save(("data/Rt/" + str(i) + str(j)), Rt)
 
-                """# set and save rectifyTransorm
+                """# set and save rectifyTransform
                 returns = cv2.stereoRectify(
                     camera1.getK(), 
                     distCoeffs1, 
