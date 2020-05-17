@@ -248,20 +248,20 @@ if __name__ == "__main__":
     rig = Rig([camera1,camera2,camera3], calibrated=True)
     rig=rectifyImage(rig)
     rectList=rectifyImageTest(rig)
-
+    """
     cv2.cv2.namedWindow('01', cv2.WINDOW_NORMAL)
-    cv2.imshow('01',rectList[0][0])
+    cv2.imshow('01',rectList[0][10])
     cv2.resizeWindow('01', 500, 500)
 
     cv2.cv2.namedWindow('02', cv2.WINDOW_NORMAL)
-    cv2.imshow('02', rectList[1][0])
+    cv2.imshow('02', rectList[1][10])
     cv2.resizeWindow('02', 500, 500)
 
     cv2.cv2.namedWindow('12', cv2.WINDOW_NORMAL)
-    cv2.imshow('12', rectList[2][0])
+    cv2.imshow('12', rectList[2][10])
     cv2.resizeWindow('12', 500, 500)
     cv2.waitKey(0)
-    cv2.destroyAllWindows()
+    cv2.destroyAllWindows()"""
 
 
     matches=getMatches(rig)
