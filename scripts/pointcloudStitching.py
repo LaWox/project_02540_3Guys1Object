@@ -19,7 +19,7 @@ def drawRegistrations(source, target, transformation = None, recolor = False):
     return  None
 
 
-def globalRegistration(source, target, voxel_size = 0.05, ):
+def globalRegistration(source, target, voxel_size):
 
     source_sample = source.voxel_down_sample(voxel_size)
     target_sample = target.voxel_down_sample(voxel_size)
@@ -47,8 +47,21 @@ trans = ransac_result.transformation
 
 drawRegistrations(cld1, cld2, trans, True)
 
-def ICP(source, target, ):
+def ICP(source, target, threshold, rad, maxnn):
 
-    #Evaluate initial alignment
-    threshold = 0.02
-    trans
+    trans_init = np.asarray([[1, 0, 0, o], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+
+    #Evaluate initial alignment?
+
+    point_to_plane = o3d.registration.TransformationEstimationPointToPlane()
+
+    source.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
+        radius=rad, max_nn=maxnn), fast_normal_computation=True)
+    target.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
+        radius=rad, max_nn=maxnn), fast_normal_computation=True)
+
+    icp_transformation = o3d.registration.registration_icp(source, target, threshold, trans_init, point_to_plane)
+
+    return icp_transformation
+
+
