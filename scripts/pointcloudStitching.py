@@ -60,8 +60,16 @@ def ICP(source, target, threshold, rad, maxnn):
     target.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(
         radius=rad, max_nn=maxnn), fast_normal_computation=True)
 
-    icp_transformation = o3d.registration.registration_icp(source, target, threshold, trans_init, point_to_plane)
+    icp_res = o3d.registration.registration_icp(source, target, threshold, trans_init, point_to_plane)
 
-    return icp_transformation
+    return icp_res
 
 
+#source_aligned =
+#target_aligned =
+
+icp_result = ICP(source_aligned, target_aligned, 0.1, 0.5, 300)
+
+icp_trans = icp_result.transformation
+
+drawRegistrations()
