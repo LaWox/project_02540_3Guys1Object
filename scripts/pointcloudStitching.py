@@ -4,7 +4,7 @@ import numpy as np
 import copy
 import open3d as o3d
 
-
+'''
 def drawRegistrations(source, target, transformation = None, recolor = False):
     source_temp = copy.deepcopy(source)
     target_temp = copy.deepcopy(target)
@@ -17,9 +17,21 @@ def drawRegistrations(source, target, transformation = None, recolor = False):
     o3d.visualization.draw_geometries([source_temp, target_temp])
 
     return  None
+'''
+def draw_registrations(source, target, transformation = None, recolor = False):
+    source_temp = copy.deepcopy(source)
+    target_temp = copy.deepcopy(target)
+    if(recolor):
+        source_temp.paint_uniform_color([1, 0.706, 0])
+        target_temp.paint_uniform_color([0, 0.651, 0.929])
+    if(transformation is not None):
+        source_temp.transform(transformation)
+    o3d.visualization.draw_geometries([source_temp, target_temp])
 
 
 def globalRegistration(source, target, voxel_size):
+    distance_threshold = 1.5 * voxel_size
+
     #Checks for these correspondences in ransac loops
     corr_check = [o3d.registration.CorrespondenceCheckerBasedOnDistance(distance_threshold)]
 
@@ -37,7 +49,7 @@ def globalRegistration(source, target, voxel_size):
 
     #Defining the error measure for the registration by ransac
     point_to_point = o3d.registration.TransformationEstimationPointToPoint(False)
-    distance_threshold = 1.5*voxel_size
+
 
     #The final result of transformation between the two pointclouds
     ransac_result = o3d.registration.registration_ransac_based_on_feature_matching(source_sample, target_sample, source_fpfh, target_fpfh,
@@ -45,17 +57,11 @@ def globalRegistration(source, target, voxel_size):
     return ransac_result
 
 
-cld1 = o3d.io.read_point_cloud("/Users/william/PycharmProjects/project_02540_3Guys1Object/data/3D_point_cloud_test/r1.pcd")
-cld2 = o3d.io.read_point_cloud("/Users/william/PycharmProjects/project_02540_3Guys1Object/data/3D_point_cloud_test/r1.pcd")
 
-ransac_result = globalRegistration(cld1, cld2, 0.05)
-trans = ransac_result.transformation
-
-drawRegistrations(cld1, cld2, trans, True)
 
 def ICP(source, target, threshold, rad, maxnn):
     #Initial transformation
-    trans_init = np.asarray([[1, 0, 0, o], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
+    trans_init = np.asarray([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]])
 
     #Evaluate initial alignment?
 
@@ -73,12 +79,27 @@ def ICP(source, target, threshold, rad, maxnn):
     return icp_res
 
 
-#source_aligned =
-#target_aligned =
+#importing point clouds
+cld1 = o3d.io.read_point_cloud("/Users/william/PycharmProjects/project_02540_3Guys1Object/data/3D_point_cloud_test/r1.pcd")
+cld2 = o3d.io.read_point_cloud("/Users/william/PycharmProjects/project_02540_3Guys1Object/data/3D_point_cloud_test/r3.pcd")
 
-icp_result = ICP(source_aligned, target_aligned, 0.1, 0.5, 300)
+#Running ransac
+ransac_result = globalRegistration(cld1, cld2, 0.05)
+ransac_trans = ransac_result.transformation
 
+source = cld1.transform(ransac_trans)
+target = cld2
+
+draw_registrations(cld1, cld2, transformation=ransac_trans, recolor=True)
+
+
+#Running ICP
+icp_result = ICP(source, target, 0.1, 0.5, 300)
 icp_trans = icp_result.transformation
+
+draw_registrations(source, target, transformation=icp_trans, recolor=True)
 
 #Source and target stitched together
 Stitched = target + source.transform(icp_trans)
+
+
